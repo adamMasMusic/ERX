@@ -131,8 +131,7 @@ local customFeaturesAdd = QoLTab:Button({
 	Callback = function()
 		local customFeatures = "WindUI/CustomFeatures/CustomFeatures.lua"
 		local s = [[
---QoL
-loadstring(game:HttpGet("https://raw.githubusercontent.com/adamMasMusic/ERX/refs/heads/main/QoL.lua"))()
+loadstring(game:HttpGet("https://raw.githubusercontent.com/adamMasMusic/ERX/refs/heads/main/QoL.lua"))() --QoL for ERX
 ]]
 		appendfile(customFeatures, s)
 	end,
