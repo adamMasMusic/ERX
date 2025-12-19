@@ -1,3 +1,10 @@
+if _G.ERXQoL then
+	warn("QoL already loaded or is loading!")
+	return
+end
+
+_G.ERXQoL = true
+
 loadstring(game:HttpGet("https://raw.githubusercontent.com/adamMasMusic/ERX/refs/heads/main/structure.lua"))()
 
 repeat
@@ -114,6 +121,20 @@ local saveConfig = QoLTab:Button({
 	Locked = false,
 	Callback = function()
 		QoLConfig:Save()
+	end,
+})
+
+local customFeaturesAdd = QoLTab:Button({
+	Title = "Add to custom features",
+	Desc = "Adds this script to custom features so it loads every time with ERX",
+	Locked = false,
+	Callback = function()
+		local customFeatures = "WindUI/CustomFeatures/CustomFeatures.lua"
+		local s = [[
+--QoL
+loadstring(game:HttpGet("https://raw.githubusercontent.com/adamMasMusic/ERX/refs/heads/main/QoL.lua"))()
+]]
+		appendfile(customFeatures, s)
 	end,
 })
 
