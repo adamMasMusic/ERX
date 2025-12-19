@@ -1,3 +1,5 @@
+loadstring(game:HttpGet("https://raw.githubusercontent.com/adamMasMusic/ERX/refs/heads/main/structure.lua"))()
+
 repeat
 	task.wait()
 until _G.ERXStructure
@@ -134,6 +136,12 @@ local saveConfig = QoLTab:Button({
 })
 
 QoLConfig:Load()
+
+WindUI:Notify({
+	Title = "QoL loaded",
+	Content = "Enjoy your fancy keybinds and settings!",
+	Duration = 3,
+})
 
 --keybinds ig
 task.spawn(function()
