@@ -5,6 +5,10 @@ until _G.WindUI and _G.Functions
 local Tabs = _G.Tabs
 
 local structure = {
+	main = {
+		Tab = Tabs.Main,
+		Respawn = nil,
+	},
 	localPlayer = {
 		Tab = Tabs.LocalPlayer,
 		InfiniteJump = nil,
@@ -29,6 +33,12 @@ local structure = {
 		NoCollision = nil,
 	},
 }
+
+for _, item in Tabs.Main.Elements do
+	if item.Title == "Respawn" then
+		structure.main.Respawn = item
+	end
+end
 
 for _, item in Tabs.VehicleMods.Elements do
 	if item.Title == "Vehicle Noclip" then

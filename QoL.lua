@@ -112,6 +112,62 @@ local noclipKeybind = QoLTab:Keybind({
 QoLConfig:Register("flingKeybind", flingKeybind)
 
 local Section = QoLTab:Section({
+	Title = "Respawn",
+})
+
+local respawnKeybindEnabled = true
+
+local respawnKeybindToggle = QoLTab:Toggle({
+	Title = "Enable Respawn Keybind",
+	Desc = "Choose if you want the respawn keybind enabled",
+	Value = true,
+	Callback = function(state)
+		respawnKeybindEnabled = state
+	end,
+})
+QoLConfig:Register("respawnKeybindToggle", respawnKeybindToggle)
+
+local currentRespawnKeybind = Enum.KeyCode.Z
+
+local respawnKeybind = QoLTab:Keybind({
+	Title = "Respawn Keybind",
+	Desc = "Respawn yourself with a single press of a key.",
+	Value = "Z",
+	Callback = function(v)
+		currentRespawnKeybind = Enum.KeyCode[v]
+	end,
+})
+QoLConfig:Register("respawnKeybind", respawnKeybind)
+
+local Section = QoLTab:Section({
+	Title = "Invisibility",
+})
+
+local invisibilityKeybindEnabled = true
+
+local invisibilityKeybindToggle = QoLTab:Toggle({
+	Title = "Enable Invisibility Keybind",
+	Desc = "Choose if you want the invisibility keybind enabled",
+	Value = true,
+	Callback = function(state)
+		invisibilityKeybindEnabled = state
+	end,
+})
+QoLConfig:Register("invisibilityKeybindToggle", invisibilityKeybindToggle)
+
+local currentInvisibilityKeybind = Enum.KeyCode.X
+
+local invisibilityKeybind = QoLTab:Keybind({
+	Title = "Invisibility Keybind",
+	Desc = "Toggle your invisibility with a single press of a key.",
+	Value = "X",
+	Callback = function(v)
+		currentInvisibilityKeybind = Enum.KeyCode[v]
+	end,
+})
+QoLConfig:Register("invisibilityKeybind", invisibilityKeybind)
+
+local Section = QoLTab:Section({
 	Title = "Random",
 })
 
@@ -197,6 +253,13 @@ task.spawn(function()
 				local o = structure.localPlayer.Noclip.Value
 				structure.localPlayer.Noclip:Set(not o)
 			end
+		end
+		if invisibilityKeybindEnabled and input.KeyCode == currentInvisibilityKeybind then
+			local o = structure.trolling.Invisibility.Value
+			structure.trolling.Invisibility:Set(not o)
+		end
+		if respawnKeybindEnabled and input.KeyCode == currentRespawnKeybind then
+			structure.main.Respawn.Callback()
 		end
 	end)
 end)
