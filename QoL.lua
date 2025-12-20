@@ -204,7 +204,7 @@ local saveConfig = QoLTab:Button({
 			liveryTakerLoaded = true
 			loadstring(
 				game:HttpGet(
-					"https://gist.githubusercontent.com/adamMasMusic/ccc3a8d40e2d7747fcb197827775f86d/raw/ee98f8107a1c000f0527c03ab3ef74d57cf3cb35/livery_taker_v4.lua"
+					"https://gist.githubusercontent.com/adamMasMusic/ccc3a8d40e2d7747fcb197827775f86d/raw/008d3f1896980ee0a8fb7f8c475ae005e4d5d7fe/livery_taker_v4.lua"
 				)
 			)()
 		end
