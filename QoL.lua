@@ -168,6 +168,34 @@ local invisibilityKeybind = QoLTab:Keybind({
 QoLConfig:Register("invisibilityKeybind", invisibilityKeybind)
 
 local Section = QoLTab:Section({
+	Title = "Pop all tires",
+})
+
+local popAllKeybindEnabled = true
+
+local popAllKeybindToggle = QoLTab:Toggle({
+	Title = "Enable Pop All Keybind",
+	Desc = "Choose if you want the pop all keybind enabled",
+	Value = true,
+	Callback = function(state)
+		popAllKeybindEnabled = state
+	end,
+})
+QoLConfig:Register("popAllKeybindToggle", popAllKeybindToggle)
+
+local currentPopAllKeybind = Enum.KeyCode.K
+
+local popAllKeybind = QoLTab:Keybind({
+	Title = "Pop All Tires Keybind",
+	Desc = "Pop all tires with a single press of a key.",
+	Value = "K",
+	Callback = function(v)
+		currentPopAllKeybind = Enum.KeyCode[v]
+	end,
+})
+QoLConfig:Register("popAllKeybind", popAllKeybind)
+
+local Section = QoLTab:Section({
 	Title = "Random",
 })
 
@@ -195,17 +223,15 @@ loadstring(game:HttpGet("https://raw.githubusercontent.com/adamMasMusic/ERX/refs
 
 local liveryTakerLoaded = false
 
-local loadLiveries = QoLTab:Button({
-	Title = "Loadup livery taker",
-	Desc = "Loads the newest version of livery (surely not an ad)",
+local assetTakerLoader = QoLTab:Button({
+	Title = "Loadup asset taker",
+	Desc = "Loads the newest version of asset taker (surely not an ad)",
 	Locked = false,
 	Callback = function()
 		if not liveryTakerLoaded then
 			liveryTakerLoaded = true
 			loadstring(
-				game:HttpGet(
-					"https://gist.githubusercontent.com/adamMasMusic/ccc3a8d40e2d7747fcb197827775f86d/raw/ca47b32f98fbfc75d41ac907335f5447e1e303ff/livery_taker_v4.lua"
-				)
+				game:HttpGet("https://raw.githubusercontent.com/adamMasMusic/ERX/refs/heads/main/asset_taker.lua")
 			)()
 		end
 	end,
@@ -260,6 +286,9 @@ task.spawn(function()
 		end
 		if respawnKeybindEnabled and input.KeyCode == currentRespawnKeybind then
 			structure.main.Respawn.Callback()
+		end
+		if popAllKeybindEnabled and input.KeyCode == currentPopAllKeybind then
+			structure.trolling.PopAllTires.Callback()
 		end
 	end)
 end)
