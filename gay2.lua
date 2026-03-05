@@ -31,7 +31,7 @@ local function checkServerList()
     if not found then
         local servers = game:GetService("ReplicatedStorage").PrivateServers.GetServers:InvokeServer()
         for _, server in servers do
-            if server.LiveryPack and not server.Locked and server.TierRequirement == 0 and server.GroupJoin == 0 then
+            if type(server) == "table" and server.LiveryPack and not server.Locked and server.TierRequirement == 0 and server.GroupJoin == 0 then
                 servers[server.CurrKey] = false
             end
         end
