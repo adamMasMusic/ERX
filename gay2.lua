@@ -6,9 +6,11 @@ local function getServerToJoin()
     for key, val in servers do
         if val == false then
             join = key
+            break
         end
     end
     servers[join] = true
+    print(join, servers[join])
     writefile("asset taker/servers.json", httpService:JSONEncode(servers))
     return join
 end
@@ -33,6 +35,7 @@ local function checkServerList()
     for _, file in existingFiles do
         if file == "servers.json" then
             found = true
+            break
         end
     end
     if not found then
