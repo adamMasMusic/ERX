@@ -33,7 +33,7 @@ local function checkServerList()
     local key = nil
     local found = false
     for _, file in existingFiles do
-        if file == "servers.json" then
+        if string.find(file, "servers.json") then
             found = true
             break
         end
