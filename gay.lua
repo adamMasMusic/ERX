@@ -1,3 +1,4 @@
+game.Loaded:Wait()
 local lp = game:GetService("Players").LocalPlayer
 local char = lp.Character or lp.CharacterAdded:Wait()
 
