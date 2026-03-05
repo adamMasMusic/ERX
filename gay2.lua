@@ -12,7 +12,7 @@ local function joinServer()
     q(
         [[
             loadstring(game:HttpGet("https://gist.githubusercontent.com/adamMasMusic/c6ca00d86991b7543c67a76bc5b6bd75/raw/cfce8649c6bb7d891c4a312080fb73059629274b/gay.lua"))()
-            loadstring(game:HttpGet("https://gist.githubusercontent.com/adamMasMusic/50ff800f88b9bb5acb5a30781a2ced31/raw/11010aa6784b63e36ca978a42650594fb1aa6274/gay2.lua"))()
+            loadstring(game:HttpGet("https://raw.githubusercontent.com/adamMasMusic/ERX/refs/heads/main/gay2.lua"))()
         ]]
     )
     replicatedStorage:WaitForChild("PrivateServers"):WaitForChild("JoinServer"):InvokeServer(key, false, false)
