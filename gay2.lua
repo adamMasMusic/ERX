@@ -2,12 +2,17 @@ local httpService = game:GetService("HttpService")
 
 local function getServerToJoin()
     local servers = httpService:JSONDecode(readfile("asset taker/servers.json"))
+    local join = nil
     for key, val in servers do
-        if not val then return key end
+        if not val then
+            join = key
+        end
     end
+    servers[join] = true
+    writefile("asset taker/servers.json", httpService:JSONEncode(servers))
 end
 
-local function joinServer()
+local function joinServer(key)
     local q = queue_on_teleport or queueonteleport or queueteleport
     q(
         [[
@@ -15,7 +20,7 @@ local function joinServer()
             loadstring(game:HttpGet("https://raw.githubusercontent.com/adamMasMusic/ERX/refs/heads/main/gay2.lua"))()
         ]]
     )
-    game:GetService("ReplicatedStorage"):WaitForChild("PrivateServers"):WaitForChild("JoinServer"):InvokeServer(key, false, false)
+    print(game:GetService("ReplicatedStorage"):WaitForChild("PrivateServers"):WaitForChild("JoinServer"):InvokeServer(key, false, false))
 end
 
 local function checkServerList()
