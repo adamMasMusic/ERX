@@ -675,7 +675,7 @@ local function getJob()
     repeat task.wait() until isPlayerInOwnCar()
 
     workspace.Vehicles["Chevlon Captain 1992"]:MoveTo(
-        workspace:WaitForChild("JobStarters"):WaitForChild("News Station Worker"):WaitForChild("Main").Position
+        workspace:WaitForChild("JobStarters"):WaitForChild("News Station Worker").WorldPivot.Position
     )
 
     task.wait(1)
