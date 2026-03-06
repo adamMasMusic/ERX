@@ -44,6 +44,7 @@ end)
 
 if not response then warn("Gay you arent in a private server") ; return end
 
+-- sanitizes a single path segment only, never a full path
 local function sanitize(s)
     s = tostring(s):match("^%s*(.-)%s*$")
     s = s:gsub('[<>:"/\\|?*]', "_")
@@ -159,9 +160,8 @@ local function decompressGzip(data)
     end
 end
 
+-- folder and imageName must already be sanitized before calling this
 local function getImage(imageId, folder, imageName)
-    folder = sanitize(folder)
-    imageName = sanitize(imageName)
     local response
     if settings.cookieValid then
         response = request({
@@ -309,17 +309,17 @@ end
 ]]
 
 local function getServerData()
-    local settings =
+    local serverSettings =
         replicatedStorage:WaitForChild("PrivateServers"):WaitForChild("GetSettings"):InvokeServer()
 
     return {
-        name = settings.Data.Name,
-        code = settings.Data.CurrKey,
-        icon = settings.Data.IconId,
-        rules = settings.Data.Rules,
-        description = settings.Data.Description,
-        teams = settings.Data.CustomTeams,
-        original = settings
+        name = serverSettings.Data.Name,
+        code = serverSettings.Data.CurrKey,
+        icon = serverSettings.Data.IconId,
+        rules = serverSettings.Data.Rules,
+        description = serverSettings.Data.Description,
+        teams = serverSettings.Data.CustomTeams,
+        original = serverSettings
     }
 end
 
@@ -393,11 +393,9 @@ local function makeLiveryEmbed(car, uniqueLivery, category)
     for side, id in uniqueLivery.textures do
         embed.description = embed.description
             .. side
-            .. ": "
-            .. "`"
+            .. ": `"
             .. id
-            .. "`"
-            .. "\n"
+            .. "`\n"
     end
     return embed
 end
@@ -476,28 +474,31 @@ local function formatLiveryData(car, liveryData, category)
 
         if settings.download then
             local downloadLocation
+            local safeCar = sanitize(liveryTable.car)
+            local safeCategory = sanitize(category)
+            local safeLiveryName = sanitize(uniqueLivery.name)
+
             if liveryTable.liveryCount == 1 then
-                downloadLocation = "/"
-                    .. sanitize(category)
-                    .. "/liveries/"
-                    .. sanitize(liveryTable.car)
-            else
-                downloadLocation = "/"
-                    .. sanitize(category)
-                    .. "/liveries/"
-                    .. sanitize(liveryTable.car)
+                downloadLocation = settings.baseDownloadLocation
+                    .. safeServerName
                     .. "/"
-                    .. sanitize(uniqueLivery.name)
+                    .. safeCategory
+                    .. "/liveries/"
+                    .. safeCar
+            else
+                downloadLocation = settings.baseDownloadLocation
+                    .. safeServerName
+                    .. "/"
+                    .. safeCategory
+                    .. "/liveries/"
+                    .. safeCar
+                    .. "/"
+                    .. safeLiveryName
             end
-            downloadLocation = settings.baseDownloadLocation
-                .. safeServerName
-                .. downloadLocation
+
             makefolder(downloadLocation)
             writefile(
-                downloadLocation
-                    .. "/"
-                    .. sanitize(uniqueLivery.name)
-                    .. ".txt",
+                downloadLocation .. "/" .. safeLiveryName .. ".txt",
                 unique
             )
 
@@ -536,7 +537,7 @@ local function outputLiveries(liveryTable)
     for team, val in liveryCopy do
         local count = 0
         if type(val) == "table" then
-            for _, i in val do
+            for _, _ in val do
                 count += 1
             end
         end
@@ -551,7 +552,9 @@ local function outputLiveries(liveryTable)
             end
             liveries = liveries
                 .. string.rep("=", 30)
-                .. tostring("\n" .. team .. "\n")
+                .. "\n"
+                .. tostring(team)
+                .. "\n"
                 .. string.rep("=", 30)
                 .. "\n"
             liveryTables[team] = {}
@@ -605,8 +608,7 @@ local function getCar()
 
     if not interaction then return false end
 
-    local spawnCar =
-        { "Chevlon Captain 1992", nil, false, interaction }
+    local spawnCar = { "Chevlon Captain 1992", nil, false, interaction }
     local buyCar = {
         "Chevlon Captain 1992",
         Color3.new(
@@ -656,7 +658,10 @@ local function getJob()
         game:GetService("ReplicatedStorage"):WaitForChild("FE"):WaitForChild("GetWantedLevel"):InvokeServer(game.Players.LocalPlayer)
         ~= 0
     then
-        warn("Player is wanted!", "Make sure you are not wanted to take liveries.")
+        warn(
+            "Player is wanted!",
+            "Make sure you are not wanted to take liveries."
+        )
         return
     end
 
@@ -675,7 +680,9 @@ local function getJob()
     repeat task.wait() until isPlayerInOwnCar()
 
     workspace.Vehicles["Chevlon Captain 1992"]:MoveTo(
-        workspace:WaitForChild("JobStarters"):WaitForChild("News Station Worker").WorldPivot.Position
+        workspace:WaitForChild("JobStarters"):WaitForChild(
+            "News Station Worker"
+        ).Main.Position
     )
 
     task.wait(1)
@@ -686,7 +693,7 @@ local function getJob()
         )
 
     if joinTeam ~= "Success" then
-        warn("Livery taker debug", joinTeam)
+        notif("Livery taker debug", joinTeam)
     end
 end
 
@@ -702,7 +709,11 @@ local function getLiveries()
     if success then
         return outputLiveries(data.liveries)
     else
-        warn("Failed to get livery data!", "Something seems to have gone wrong", 5)
+        notif(
+            "Failed to get livery data!",
+            "Something seems to have gone wrong",
+            5
+        )
         return
     end
 end
@@ -764,15 +775,13 @@ local function outputServerInfo()
             .. string.format(
                 "%-10s %s\n",
                 "  **Name:**",
-                "`" .. tostring(info.Name)
+                "`" .. tostring(info.Name) .. "`"
             )
-            .. "`"
             .. string.format(
                 "%-10s %s\n",
                 "  **Logo id:**",
-                "`" .. tostring(info.Logo)
+                "`" .. tostring(info.Logo) .. "`"
             )
-            .. "`"
     end
 
     local descEmbed = {
@@ -794,7 +803,9 @@ local function outputServerInfo()
             settings.baseDownloadLocation .. safeServerName,
             "logo"
         )
-        if ok then table.insert(images, { name = "logo.png", data = img }) end
+        if ok then
+            table.insert(images, { name = "logo.png", data = img })
+        end
 
         for team, info in data.teams do
             local safeTeam = sanitize(team)
@@ -864,15 +875,12 @@ local function getUniforms()
 
                 uniforms = uniforms
                     .. string.format(
-                        "%-10s %s",
+                        "%-10s %s\n",
                         "  Name:",
                         tostring(uniform.Name)
                     )
-                    .. "\n"
-                    .. string.format("%-10s %s", "    Shirt:", shirtId)
-                    .. "\n"
-                    .. string.format("%-10s %s", "    Pants:", pantsId)
-                    .. "\n"
+                    .. string.format("%-10s %s\n", "    Shirt:", shirtId)
+                    .. string.format("%-10s %s\n", "    Pants:", pantsId)
 
                 task.spawn(function()
                     local images = {}
