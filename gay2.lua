@@ -28,6 +28,7 @@ local function joinServer(key)
 end
 
 local function checkServerList()
+    makefolder("asset taker")
     local existingFiles = listfiles("asset taker")
     local out = {}
     local key = nil
