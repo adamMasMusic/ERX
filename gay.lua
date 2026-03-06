@@ -44,6 +44,14 @@ end)
 
 if not response then warn("Gay you arent in a private server") ; return end
 
+local function sanitize(s)
+    s = tostring(s):match("^%s*(.-)%s*$")
+    s = s:gsub('[<>:"/\\|?*]', "_")
+    return s
+end
+
+local safeServerName = sanitize(serverName)
+
 local function testCookie(cookie)
     local response = request({
         Url = "https://assetdelivery.roblox.com/v1/asset/?id=" .. "116800358210190",
@@ -75,7 +83,7 @@ end
 
 local function getColor(color)
     color = color:split(", ")
-    local newColor = Color3.new(color[1],color[2],color[3])
+    local newColor = Color3.new(color[1], color[2], color[3])
     return newColor:ToHex()
 end
 
@@ -87,7 +95,10 @@ local function testCookie(cookie)
             ["Cookie"] = cookie
         }
     })
-    if response.Body == [[{"errors":[{"code":0,"message":"Authentication required to access Asset."}]}]] then
+    if
+        response.Body
+        == [[{"errors":[{"code":0,"message":"Authentication required to access Asset."}]}]]
+    then
         return false
     else
         return true
@@ -96,42 +107,51 @@ end
 
 local function decompressGzip(data)
     local byte1, byte2, byte3, byte4 = data:byte(1, 4)
-    if byte1 == 0x89 and byte2 == 0x50 and byte3 == 0x4E and byte4 == 0x47 then
-        return data --roblox lied about decompression (this happens after the new fucking update)
+    if
+        byte1 == 0x89
+        and byte2 == 0x50
+        and byte3 == 0x4E
+        and byte4 == 0x47
+    then
+        return data
     end
 
     if data:byte(1) ~= 0x1F or data:byte(2) ~= 0x8B then
         return nil, "Not GZIP format"
     end
-    
+
     local flags = data:byte(4)
     local pos = 11
-    
+
     if bit32.band(flags, 0x04) ~= 0 then
         local xlen = data:byte(pos) + data:byte(pos + 1) * 256
         pos = pos + 2 + xlen
     end
-    
+
     if bit32.band(flags, 0x08) ~= 0 then
-        while data:byte(pos) ~= 0 do pos = pos + 1 end
+        while data:byte(pos) ~= 0 do
+            pos = pos + 1
+        end
         pos = pos + 1
     end
-    
+
     if bit32.band(flags, 0x10) ~= 0 then
-        while data:byte(pos) ~= 0 do pos = pos + 1 end
+        while data:byte(pos) ~= 0 do
+            pos = pos + 1
+        end
         pos = pos + 1
     end
-    
+
     if bit32.band(flags, 0x02) ~= 0 then
         pos = pos + 2
     end
-    
+
     local deflateData = data:sub(pos, #data - 8)
-    
+
     local success, result = pcall(function()
         return LibDeflate.Deflate.Decompress(deflateData)
     end)
-    
+
     if success and result then
         return result
     else
@@ -140,7 +160,8 @@ local function decompressGzip(data)
 end
 
 local function getImage(imageId, folder, imageName)
-    folder = folder:gsub("%s+$", "")
+    folder = sanitize(folder)
+    imageName = sanitize(imageName)
     local response
     if settings.cookieValid then
         response = request({
@@ -156,11 +177,13 @@ local function getImage(imageId, folder, imageName)
     end
 
     local data = response.Body
-    local contentEncoding = response.Headers["Content-Encoding"] or response.Headers["content-encoding"]
-    
+    local contentEncoding =
+        response.Headers["Content-Encoding"]
+        or response.Headers["content-encoding"]
+
     if contentEncoding == "gzip" then
         local decompressed, err = decompressGzip(data)
-        
+
         if decompressed then
             data = decompressed
         else
@@ -170,12 +193,20 @@ local function getImage(imageId, folder, imageName)
     end
 
     local byte1, byte2, byte3, byte4 = data:byte(1, 4)
-    if byte1 == 0x89 and byte2 == 0x50 and byte3 == 0x4E and byte4 == 0x47 then
+    if
+        byte1 == 0x89
+        and byte2 == 0x50
+        and byte3 == 0x4E
+        and byte4 == 0x47
+    then
         writefile(folder .. "/" .. imageName .. ".png", data)
         return true, data
     else
         print(folder .. "/" .. imageName .. ".txt")
-        writefile(folder .. "/" .. imageName .. ".txt", response.StatusCode .. "\n" .. response.Body)
+        writefile(
+            folder .. "/" .. imageName .. ".txt",
+            response.StatusCode .. "\n" .. response.Body
+        )
         return false, response
     end
 end
@@ -191,8 +222,8 @@ local function sendToDiscord(embed, images, webhook)
             Headers = {
                 ["Content-Type"] = "application/json"
             },
-            Body = HttpService:JSONEncode({
-                embeds = {embed}
+            Body = httpService:JSONEncode({
+                embeds = { embed }
             })
         })
     end)
@@ -205,44 +236,51 @@ local function sendToDiscord(embed, images, webhook)
                 Headers = {
                     ["Content-Type"] = "application/json"
                 },
-                Body = HttpService:JSONEncode({
-                    embeds = {embed}
+                Body = httpService:JSONEncode({
+                    embeds = { embed }
                 })
             })
         end)
     end
-    
+
     task.wait()
-    
+
     if #images > 0 then
         for i = 1, #images, 10 do
-            local boundary = "----WebKitFormBoundary" .. HttpService:GenerateGUID(false)
+            local boundary =
+                "----WebKitFormBoundary" .. httpService:GenerateGUID(false)
             local body = ""
-            
+
             local endIndex = math.min(i + 9, #images)
             for j = i, endIndex do
                 local imageData = images[j].data
                 local fileName = images[j].name
-                
+
                 body = body .. "--" .. boundary .. "\r\n"
-                body = body .. 'Content-Disposition: form-data; name="file' .. (j - i + 1) .. '"; filename="' .. fileName .. '"\r\n'
+                body = body
+                    .. 'Content-Disposition: form-data; name="file'
+                    .. (j - i + 1)
+                    .. '"; filename="'
+                    .. fileName
+                    .. '"\r\n'
                 body = body .. "Content-Type: image/png\r\n\r\n"
                 body = body .. imageData .. "\r\n"
             end
-            
+
             body = body .. "--" .. boundary .. "--\r\n"
-            
+
             local imageSuccess, imageResponse = pcall(function()
                 return request({
                     Url = webhook,
                     Method = "POST",
                     Headers = {
-                        ["Content-Type"] = "multipart/form-data; boundary=" .. boundary
+                        ["Content-Type"] = "multipart/form-data; boundary="
+                            .. boundary
                     },
                     Body = body
                 })
             end)
-            
+
             if imageResponse.StatusCode == 429 then
                 task.wait(5)
                 local imageSuccess, imageResponse = pcall(function()
@@ -250,7 +288,8 @@ local function sendToDiscord(embed, images, webhook)
                         Url = webhook,
                         Method = "POST",
                         Headers = {
-                            ["Content-Type"] = "multipart/form-data; boundary=" .. boundary
+                            ["Content-Type"] = "multipart/form-data; boundary="
+                                .. boundary
                         },
                         Body = body
                     })
@@ -270,7 +309,8 @@ end
 ]]
 
 local function getServerData()
-    local settings = replicatedStorage:WaitForChild("PrivateServers"):WaitForChild("GetSettings"):InvokeServer()
+    local settings =
+        replicatedStorage:WaitForChild("PrivateServers"):WaitForChild("GetSettings"):InvokeServer()
 
     return {
         name = settings.Data.Name,
@@ -292,7 +332,7 @@ local function makeLiveryTable(car, liveryData, carId)
     }
     for _, livery in liveryData do
         local outLivery = {
-            name = tostring(livery.liveryName):gsub("%s+", " "):gsub("^%s*(.-)%s*$", "%1"),
+            name = sanitize(tostring(livery.liveryName)),
             vehicleColor = tostring(getColor(livery.vehicleColor)),
             liveryColor = tostring(getColor(livery.liveryColor)),
             liveryTransparency = tostring(livery.liveryTransparency),
@@ -303,7 +343,8 @@ local function makeLiveryTable(car, liveryData, carId)
                 stg3 = livery.Stage3Patterns,
                 color = livery.ELSColor
             },
-            approved = livery.isApproved == true and "Approved" or liveryDenialReasons[livery.isApproved],
+            approved = livery.isApproved == true and "Approved"
+                or liveryDenialReasons[livery.isApproved],
             textures = {}
         }
         for side, id in livery.textureIds do
@@ -314,34 +355,58 @@ local function makeLiveryTable(car, liveryData, carId)
     return liveryTable
 end
 
-
 local function makeLiveryEmbed(car, uniqueLivery, category)
     local embed = {
         title = car.Name,
         description = "",
         fields = {
-            {name = "Team", value = categoryMap[category], inline = true},
-            {name = "Name", value = "`" .. uniqueLivery.name .. "`", inline = true},
-            {name = "Vehicle Color", value = "`" .. uniqueLivery.vehicleColor .. "`", inline = true},
-            {name = "Livery Color", value = "`" .. uniqueLivery.liveryColor .. "`", inline = true},
-            {name = "Livery Transparency", value = "`" .. uniqueLivery.liveryTransparency .. "`", inline = true},
-            {name = "Approval Status", value = uniqueLivery.approved, inline = true},
-            {name = "Server", value = serverName, inline = true},
-            {name = "Join code", value = joinCode, inline = true}
+            { name = "Team", value = categoryMap[category], inline = true },
+            {
+                name = "Name",
+                value = "`" .. uniqueLivery.name .. "`",
+                inline = true
+            },
+            {
+                name = "Vehicle Color",
+                value = "`" .. uniqueLivery.vehicleColor .. "`",
+                inline = true
+            },
+            {
+                name = "Livery Color",
+                value = "`" .. uniqueLivery.liveryColor .. "`",
+                inline = true
+            },
+            {
+                name = "Livery Transparency",
+                value = "`" .. uniqueLivery.liveryTransparency .. "`",
+                inline = true
+            },
+            {
+                name = "Approval Status",
+                value = uniqueLivery.approved,
+                inline = true
+            },
+            { name = "Server", value = serverName, inline = true },
+            { name = "Join code", value = joinCode, inline = true }
         }
     }
     for side, id in uniqueLivery.textures do
-        embed.description = embed.description .. side .. ": " .. "`" .. id .. "`" .. "\n"
+        embed.description = embed.description
+            .. side
+            .. ": "
+            .. "`"
+            .. id
+            .. "`"
+            .. "\n"
     end
     return embed
 end
 
-
 local function getLiveryImages(textureIds, downloadLocation)
-    local textureAmmout = 0
+    local textureAmount = 0
     local passCount = 0
     for _, _ in textureIds do
-        textureAmmout += 1
+        textureAmount += 1
     end
 
     local images = {}
@@ -361,50 +426,91 @@ local function getLiveryImages(textureIds, downloadLocation)
         task.wait()
     end
 
-    repeat task.wait() until passCount == textureAmmout
+    repeat task.wait() until passCount == textureAmount
     return images
 end
 
 local function formatLiveryData(car, liveryData, category)
     local livery = ""
-    --get real car name
     local carId = tonumber(car)
     local car = vehicles.GetCarById(categoryMap[category], tonumber(car))
     local liveryTable = makeLiveryTable(car, liveryData, carId)
-    --formatting
+
     livery = livery
         .. string.format("%-22s %s\n", "Car:", liveryTable.car)
-        .. string.format("%-22s %s\n", " Livery Count:", liveryTable.liveryCount)
+        .. string.format(
+            "%-22s %s\n",
+            " Livery Count:",
+            liveryTable.liveryCount
+        )
+
     for key, uniqueLivery in liveryTable.liveries do
         local unique = ""
             .. string.format("%-22s %s\n", "  Name:", uniqueLivery.name)
-            .. string.format("%-22s %s\n", "  Vehicle Color:", uniqueLivery.vehicleColor)
-            .. string.format("%-22s %s\n", "  Livery Color:", uniqueLivery.liveryColor)
-            .. string.format("%-22s %s\n", "  Livery Transparency:", uniqueLivery.liveryTransparency)
-            .. string.format("%-22s %s\n", "  Approval Status:", uniqueLivery.approved)
+            .. string.format(
+                "%-22s %s\n",
+                "  Vehicle Color:",
+                uniqueLivery.vehicleColor
+            )
+            .. string.format(
+                "%-22s %s\n",
+                "  Livery Color:",
+                uniqueLivery.liveryColor
+            )
+            .. string.format(
+                "%-22s %s\n",
+                "  Livery Transparency:",
+                uniqueLivery.liveryTransparency
+            )
+            .. string.format(
+                "%-22s %s\n",
+                "  Approval Status:",
+                uniqueLivery.approved
+            )
         livery = livery .. unique
         livery = livery .. "  Texture Ids:\n"
         for side, id in uniqueLivery.textures do
-            livery = livery .. string.format("    %-12s %s\n", side .. ":", id)
+            livery = livery
+                .. string.format("    %-12s %s\n", side .. ":", id)
         end
 
-        --downloading
-        local downloadLocation
         if settings.download then
+            local downloadLocation
             if liveryTable.liveryCount == 1 then
-                downloadLocation = "/" .. category .. "/liveries/" .. liveryTable.car
+                downloadLocation = "/"
+                    .. sanitize(category)
+                    .. "/liveries/"
+                    .. sanitize(liveryTable.car)
             else
-                downloadLocation = "/" .. category .. "/liveries/" .. liveryTable.car .. "/" .. uniqueLivery.name
+                downloadLocation = "/"
+                    .. sanitize(category)
+                    .. "/liveries/"
+                    .. sanitize(liveryTable.car)
+                    .. "/"
+                    .. sanitize(uniqueLivery.name)
             end
-            downloadLocation = downloadLocation:gsub("%s+", ""):gsub("^%s*(.-)%s*$", "%1")
-            downloadLocation = settings.baseDownloadLocation .. serverName .. downloadLocation
+            downloadLocation = settings.baseDownloadLocation
+                .. safeServerName
+                .. downloadLocation
             makefolder(downloadLocation)
-            writefile(downloadLocation .. "/" .. uniqueLivery.name:gsub("%s+", " "):gsub("^%s*(.-)%s*$", "%1") .. ".txt", unique)
+            writefile(
+                downloadLocation
+                    .. "/"
+                    .. sanitize(uniqueLivery.name)
+                    .. ".txt",
+                unique
+            )
 
             local images = getLiveryImages(uniqueLivery.textures, downloadLocation)
             local embed = makeLiveryEmbed(car, uniqueLivery, category)
 
-            if settings.sendToWebhook and string.find(settings.webhookURL, "discord.com/api/webhooks/") then
+            if
+                settings.sendToWebhook
+                and string.find(
+                    settings.webhookURL,
+                    "discord.com/api/webhooks/"
+                )
+            then
                 sendToDiscord(embed, images, settings.webhookURL)
             end
         end
@@ -436,7 +542,12 @@ local function outputLiveries(liveryTable)
         end
         if count > 0 then
             if settings.download then
-                makefolder(settings.baseDownloadLocation .. serverName .. "/" .. team)
+                makefolder(
+                    settings.baseDownloadLocation
+                        .. safeServerName
+                        .. "/"
+                        .. sanitize(team)
+                )
             end
             liveries = liveries
                 .. string.rep("=", 30)
@@ -447,7 +558,8 @@ local function outputLiveries(liveryTable)
             if type(val) == "table" then
                 for car, carData in val do
                     if #carData > 0 then
-                        local liveryString, liveryTable = formatLiveryData(car, carData, team)
+                        local liveryString, liveryTable =
+                            formatLiveryData(car, carData, team)
                         liveries = liveries .. liveryString
                         table.insert(liveryTables[team], liveryTable)
                     end
@@ -463,9 +575,12 @@ end
 
 local function getClosestCivilianSpawner()
     local closest, dist = nil, math.huge
-    local playerLoc = game.Players.LocalPlayer.Character.WorldPivot.Position  
+    local playerLoc = game.Players.LocalPlayer.Character.WorldPivot.Position
     for _, item in workspace:WaitForChild("VehicleSpawners"):GetChildren() do
-        if item.Name == "Civilian_Spawners" and #item:GetChildren() > 0 then
+        if
+            item.Name == "Civilian_Spawners"
+            and #item:GetChildren() > 0
+        then
             for _, spawner in item:GetChildren() do
                 if #spawner:GetChildren() > 0 then
                     local a = playerLoc - spawner.WorldPivot.Position
@@ -482,19 +597,34 @@ end
 
 local function getCar()
     local closest = getClosestCivilianSpawner()
-    local interaction = closest:WaitForChild("SpawnClicker", 2):WaitForChild("InteractionAttachment", 2)
+    local interaction =
+        closest:WaitForChild("SpawnClicker", 2):WaitForChild(
+            "InteractionAttachment",
+            2
+        )
 
     if not interaction then return false end
 
-    local spawnCar = {"Chevlon Captain 1992", nil, false, interaction,}
-    local buyCar = {"Chevlon Captain 1992", Color3.new(0.05098039656877518, 0.4117647409439087, 0.6745098233222961)}
+    local spawnCar =
+        { "Chevlon Captain 1992", nil, false, interaction }
+    local buyCar = {
+        "Chevlon Captain 1992",
+        Color3.new(
+            0.05098039656877518,
+            0.4117647409439087,
+            0.6745098233222961
+        )
+    }
 
-    --Functions:TeleportTo(closest.WorldPivot)
     char.HumanoidRootPart.Position = closest.WorldPivot.Position
     task.wait(0.2)
-    replicatedStorage:WaitForChild("FE"):WaitForChild("BuyCar"):InvokeServer(unpack(buyCar))
+    replicatedStorage:WaitForChild("FE"):WaitForChild("BuyCar"):InvokeServer(
+        unpack(buyCar)
+    )
     task.wait(0.2)
-    replicatedStorage:WaitForChild("FE"):WaitForChild("SpawnCar"):FireServer(unpack(spawnCar))
+    replicatedStorage:WaitForChild("FE"):WaitForChild("SpawnCar"):FireServer(
+        unpack(spawnCar)
+    )
 
     return true
 end
@@ -517,9 +647,15 @@ local function isPlayerInOwnCar()
 end
 
 local function getJob()
-    local newsJoin = {"Start", workspace:WaitForChild("JobStarters"):WaitForChild("News Station Worker")}
+    local newsJoin = {
+        "Start",
+        workspace:WaitForChild("JobStarters"):WaitForChild("News Station Worker")
+    }
 
-    if game:GetService("ReplicatedStorage"):WaitForChild("FE"):WaitForChild("GetWantedLevel"):InvokeServer(game.Players.LocalPlayer) ~= 0 then
+    if
+        game:GetService("ReplicatedStorage"):WaitForChild("FE"):WaitForChild("GetWantedLevel"):InvokeServer(game.Players.LocalPlayer)
+        ~= 0
+    then
         warn("Player is wanted!", "Make sure you are not wanted to take liveries.")
         return
     end
@@ -538,12 +674,18 @@ local function getJob()
     starter = os.time()
     repeat task.wait() until isPlayerInOwnCar()
 
-    --Functions:TeleportTo(workspace:WaitForChild("JobStarters"):WaitForChild("News Station Worker").Main.Position)
-    workspace.Vehicles["Chevlon Captain 1992"]:MoveTo(workspace:WaitForChild("JobStarters"):WaitForChild("News Station Worker").Main.Position)
+    workspace.Vehicles["Chevlon Captain 1992"]:MoveTo(
+        workspace:WaitForChild("JobStarters"):WaitForChild(
+            "News Station Worker"
+        ).Main.Position
+    )
 
     task.wait(1)
 
-    local joinTeam = game:GetService("ReplicatedStorage"):WaitForChild("FE"):WaitForChild("StartJob"):InvokeServer(unpack(newsJoin))
+    local joinTeam =
+        game:GetService("ReplicatedStorage"):WaitForChild("FE"):WaitForChild("StartJob"):InvokeServer(
+            unpack(newsJoin)
+        )
 
     if joinTeam ~= "Success" then
         notif("Livery taker debug", joinTeam)
@@ -553,7 +695,11 @@ end
 local function getLiveries()
     getJob()
 
-    local success, data = getVehicleSpawnData:Call("News Station Worker", workspace:WaitForChild("VehicleSpawners"):WaitForChild("NewsStationWorker_Spawners"):WaitForChild("Stand"):WaitForChild("SpawnClicker"):WaitForChild("InteractionAttachment")):Await()
+    local success, data =
+        getVehicleSpawnData:Call(
+            "News Station Worker",
+            workspace:WaitForChild("VehicleSpawners"):WaitForChild("NewsStationWorker_Spawners"):WaitForChild("Stand"):WaitForChild("SpawnClicker"):WaitForChild("InteractionAttachment")
+        ):Await()
 
     if success then
         return outputLiveries(data.liveries)
@@ -562,7 +708,6 @@ local function getLiveries()
         return
     end
 end
-
 
 local function outputServerInfo()
     local data = getServerData()
@@ -588,45 +733,90 @@ local function outputServerInfo()
     end
     server = server
         .. string.format("%-10s %s", "Rules:\n", tostring(data.rules))
-        .. string.format("%-10s %s", "Description:\n", tostring(data.description))
+        .. string.format(
+            "%-10s %s",
+            "Description:\n",
+            tostring(data.description)
+        )
 
     local mainEmbed = {
         title = data.name,
         description = "",
         fields = {
-            {name = "Server name", value = tostring(data.name), inline = true},
-            {name = "Server join code", value = tostring(data.code), inline = true},
-            {name = "Server icon", value = "`"..tostring(data.icon).."`", inline = true},
+            {
+                name = "Server name",
+                value = tostring(data.name),
+                inline = true
+            },
+            {
+                name = "Server join code",
+                value = tostring(data.code),
+                inline = true
+            },
+            {
+                name = "Server icon",
+                value = "`" .. tostring(data.icon) .. "`",
+                inline = true
+            }
         }
     }
     for team, info in data.teams do
         mainEmbed.description = mainEmbed.description
             .. string.format("%-10s %s\n", "**Team:**", tostring(team))
-            .. string.format("%-10s %s\n", "  **Name:**", "`"..tostring(info.Name)).."`"
-            .. string.format("%-10s %s\n", "  **Logo id:**", "`"..tostring(info.Logo)).."`"
+            .. string.format(
+                "%-10s %s\n",
+                "  **Name:**",
+                "`" .. tostring(info.Name)
+            )
+            .. "`"
+            .. string.format(
+                "%-10s %s\n",
+                "  **Logo id:**",
+                "`" .. tostring(info.Logo)
+            )
+            .. "`"
     end
 
     local descEmbed = {
         title = data.name,
-        description = "```"..data.description.."```"
+        description = "```" .. data.description .. "```"
     }
 
     local rulesEmbed = {
         title = data.name,
-        description = "```"..data.rules.."```"
+        description = "```" .. data.rules .. "```"
     }
 
     local images = {}
     if settings.download then
-        local ok, img = getImage(data.icon, settings.baseDownloadLocation .. serverName, "logo")
-        if ok then table.insert(images, {name = "logo.png", data = img}) end
+        makefolder(settings.baseDownloadLocation .. safeServerName)
+
+        local ok, img = getImage(
+            data.icon,
+            settings.baseDownloadLocation .. safeServerName,
+            "logo"
+        )
+        if ok then table.insert(images, { name = "logo.png", data = img }) end
+
         for team, info in data.teams do
-            local ok, img = getImage(info.Logo, settings.baseDownloadLocation .. serverName:gsub("%s+", " ") .. "/" .. team, info.Name:gsub("%s+", " "))
-            if ok then table.insert(images, {name = info.Name .. ".png", data = img}) end
+            local safeTeam = sanitize(team)
+            local safeName = sanitize(info.Name)
+            local teamFolder = settings.baseDownloadLocation
+                .. safeServerName
+                .. "/"
+                .. safeTeam
+            makefolder(teamFolder)
+            local ok, img = getImage(info.Logo, teamFolder, safeName)
+            if ok then
+                table.insert(images, { name = safeName .. ".png", data = img })
+            end
         end
     end
 
-    if settings.sendToWebhook and string.find(settings.webhookURL, "discord.com/api/webhooks/") then
+    if
+        settings.sendToWebhook
+        and string.find(settings.webhookURL, "discord.com/api/webhooks/")
+    then
         sendToDiscord(mainEmbed, {}, settings.webhookURL)
         sendToDiscord(descEmbed, {}, settings.webhookURL)
         sendToDiscord(rulesEmbed, images, settings.webhookURL)
@@ -647,49 +837,102 @@ local function getUniforms()
 ]]
 
     for _, team in replicatedStorage.ReplicatedState.Uniforms:GetChildren() do
-        if download then
-            makefolder(serverName .. "/" .. team.Name .. "/uniforms")
+        local safeTeam = sanitize(team.Name)
+        if settings.download then
+            makefolder(
+                settings.baseDownloadLocation
+                    .. safeServerName
+                    .. "/"
+                    .. safeTeam
+                    .. "/uniforms"
+            )
         end
         uniformTable[team.Name] = {}
-        uniforms = uniforms 
-            .. string.rep("=", 30) .. "\n"
-            .. team.Name .. "\n"
-            .. string.rep("=", 30).. "\n"
+        uniforms = uniforms
+            .. string.rep("=", 30)
+            .. "\n"
+            .. team.Name
+            .. "\n"
+            .. string.rep("=", 30)
+            .. "\n"
         for _, uniform in team:GetChildren() do
             if uniform:FindFirstChild("CustomUniform") then
                 local shirtId = extractId(tostring(uniform.Shirt.ShirtTemplate))
                 local pantsId = extractId(tostring(uniform.Pants.PantsTemplate))
-                uniformTable[team.Name][uniform.Name] = {shirt = shirtId, pants = pantsId}
+                uniformTable[team.Name][uniform.Name] = {
+                    shirt = shirtId,
+                    pants = pantsId
+                }
 
                 uniforms = uniforms
-                    .. string.format("%-10s %s", "  Name:", tostring(uniform.Name)) .. "\n"
-                    .. string.format("%-10s %s", "    Shirt:", shirtId) .. "\n"
-                    .. string.format("%-10s %s", "    Pants:", pantsId) .. "\n"
+                    .. string.format(
+                        "%-10s %s",
+                        "  Name:",
+                        tostring(uniform.Name)
+                    )
+                    .. "\n"
+                    .. string.format("%-10s %s", "    Shirt:", shirtId)
+                    .. "\n"
+                    .. string.format("%-10s %s", "    Pants:", pantsId)
+                    .. "\n"
 
                 task.spawn(function()
                     local images = {}
                     if settings.download then
-                        local n = "/" .. team.Name .. "/uniforms/" .. uniform.Name:gsub("%s+", " "):gsub("^%s*(.-)%s*$", "%1")
-                        makefolder(settings.baseDownloadLocation .. serverName .. n)
-                    
-                        local n = "/" .. team.Name .. "/uniforms/" .. uniform.Name:gsub("%s+", " "):gsub("^%s*(.-)%s*$", "%1")
-                        local a, img = getImage(shirtId, settings.baseDownloadLocation .. serverName .. n, "Shirt")
-                        if a then table.insert(images, {name = "shirt" .. ".png", data = img}) end
+                        local safeName = sanitize(uniform.Name)
+                        local uniformFolder = settings.baseDownloadLocation
+                            .. safeServerName
+                            .. "/"
+                            .. safeTeam
+                            .. "/uniforms/"
+                            .. safeName
+                        makefolder(uniformFolder)
 
-                        local a, img = getImage(pantsId, settings.baseDownloadLocation .. serverName .. n, "Pants")
-                        if a then table.insert(images, {name = "pants" .. ".png", data = img}) end
+                        local a, img =
+                            getImage(shirtId, uniformFolder, "Shirt")
+                        if a then
+                            table.insert(
+                                images,
+                                { name = "shirt.png", data = img }
+                            )
+                        end
+
+                        local a, img =
+                            getImage(pantsId, uniformFolder, "Pants")
+                        if a then
+                            table.insert(
+                                images,
+                                { name = "pants.png", data = img }
+                            )
+                        end
                     end
-                
+
                     local embed = {
                         title = serverName,
                         fields = {
-                            {name = "Team", value = tostring(team.Name), inline = true},
-                            {name = "Name", value = tostring(uniform.Name), inline = true},
-                            {name = "Shirt", value = "`"..shirtId.."`", inline = true},
-                            {name = "Pants", value = "`"..pantsId.."`", inline = true},
+                            {
+                                name = "Team",
+                                value = tostring(team.Name),
+                                inline = true
+                            },
+                            {
+                                name = "Name",
+                                value = tostring(uniform.Name),
+                                inline = true
+                            },
+                            {
+                                name = "Shirt",
+                                value = "`" .. shirtId .. "`",
+                                inline = true
+                            },
+                            {
+                                name = "Pants",
+                                value = "`" .. pantsId .. "`",
+                                inline = true
+                            }
                         }
                     }
-                
+
                     if settings.sendToWebhook then
                         sendToDiscord(embed, images, settings.webhookURL)
                     end
@@ -712,7 +955,10 @@ local function getMapTemplates()
         local layoutName = template:GetAttribute("LayoutName")
         mapLayouts[layoutName] = {}
         for _, prop in template.Props:GetChildren() do
-            table.insert(mapLayouts[layoutName], {name = prop:GetAttribute("PropName"), position = tostring(prop.WorldPivot)})
+            table.insert(mapLayouts[layoutName], {
+                name = prop:GetAttribute("PropName"),
+                position = tostring(prop.WorldPivot)
+            })
         end
     end
 
@@ -722,6 +968,8 @@ end
 local function takeAssets()
     local outputString = ""
     local outputTable = {}
+
+    makefolder(settings.baseDownloadLocation .. safeServerName)
 
     local serverInfoOutput, serverSettings = outputServerInfo()
     outputString = outputString .. serverInfoOutput
@@ -740,8 +988,22 @@ local function takeAssets()
 
     outputTable.Map = getMapTemplates()
 
-    writefile(settings.baseDownloadLocation .. "/" .. serverName .. "/" .. serverName .. ".json", httpService:JSONEncode(outputTable))
-    writefile(settings.baseDownloadLocation .. "/" .. serverName .. "/" .. serverName .. ".txt", outputString)
+    writefile(
+        settings.baseDownloadLocation
+            .. safeServerName
+            .. "/"
+            .. safeServerName
+            .. ".json",
+        httpService:JSONEncode(outputTable)
+    )
+    writefile(
+        settings.baseDownloadLocation
+            .. safeServerName
+            .. "/"
+            .. safeServerName
+            .. ".txt",
+        outputString
+    )
 
     print("DONE")
 end
