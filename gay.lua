@@ -621,7 +621,7 @@ local function outputServerInfo()
         local ok, img = getImage(data.icon, settings.baseDownloadLocation .. serverName, "logo")
         if ok then table.insert(images, {name = "logo.png", data = img}) end
         for team, info in data.teams do
-            local ok, img = getImage(info.Logo, settings.baseDownloadLocation .. serverName .. "/" .. team, info.Name)
+            local ok, img = getImage(info.Logo, settings.baseDownloadLocation .. serverName:gsub("%s+", " ") .. "/" .. team, info.Name:gsub("%s+", " "))
             if ok then table.insert(images, {name = info.Name .. ".png", data = img}) end
         end
     end
