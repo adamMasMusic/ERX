@@ -174,7 +174,6 @@ local function getImage(imageId, folder, imageName)
         writefile(folder .. "/" .. imageName .. ".png", data)
         return true, data
     else
-        print(folder .. "/" .. imageName .. ".txt")
         writefile(folder .. "/" .. imageName .. ".txt", response.StatusCode .. "\n" .. response.Body)
         return false, response
     end
