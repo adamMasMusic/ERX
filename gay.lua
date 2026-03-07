@@ -657,6 +657,14 @@ end
 
 local function gotoLocation()
     local atLocation = false
+
+    local p = char.HumanoidRootPart.Position - workspace:WaitForChild("JobStarters"):WaitForChild("News Station Worker").Main.Position
+    if p.Magnitude < 30 then
+        atLocation = true
+    end
+
+    if atLocation then return end
+
     repeat
         local car = findPlayerCar()
         car:MoveTo(
@@ -713,6 +721,7 @@ local function getJob()
         ).Main.Position
     )
 
+    task.wait(0.5)
     gotoLocation()
 
     task.wait(1)
