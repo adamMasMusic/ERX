@@ -721,7 +721,7 @@ local function getJob()
         ).Main.Position
     )
 
-    task.wait(0.5)
+    task.wait(2)
     gotoLocation()
 
     task.wait(1)
