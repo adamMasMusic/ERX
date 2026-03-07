@@ -684,6 +684,24 @@ local function getJob()
         ).Main.Position
     )
 
+    task.wait()
+    if isPlayerInOwnCar() then
+        workspace.Vehicles["Chevlon Captain 1992"]:MoveTo(
+            workspace:WaitForChild("JobStarters"):WaitForChild(
+                "News Station Worker"
+            ).Main.Position
+        )
+    end
+
+    task.wait(0.2)
+    if isPlayerInOwnCar() then
+        workspace.Vehicles["Chevlon Captain 1992"]:MoveTo(
+            workspace:WaitForChild("JobStarters"):WaitForChild(
+                "News Station Worker"
+            ).Main.Position
+        )
+    end
+
     task.wait(1)
 
     local joinTeam =
@@ -710,8 +728,7 @@ local function getLiveries()
     else
         warn(
             "Failed to get livery data!",
-            "Something seems to have gone wrong",
-            5
+            "Something seems to have gone wrong"
         )
         return
     end
