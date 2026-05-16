@@ -1,0 +1,63 @@
+local parts = {
+    -- North Wall (Z = -2910)
+    { "ConcreteBarrier", CFrame.new(-533.12, 64, -2910) * CFrame.Angles(0, math.rad(90), 0) },
+    { "ConcreteBarrier", CFrame.new(-525.60, 64, -2910) * CFrame.Angles(0, math.rad(90), 0) },
+    { "ConcreteBarrier", CFrame.new(-518.08, 64, -2910) * CFrame.Angles(0, math.rad(90), 0) },
+    { "ConcreteBarrier", CFrame.new(-510.56, 64, -2910) * CFrame.Angles(0, math.rad(90), 0) },
+    { "ConcreteBarrier", CFrame.new(-503.04, 64, -2910) * CFrame.Angles(0, math.rad(90), 0) },
+    { "ConcreteBarrier", CFrame.new(-495.52, 64, -2910) * CFrame.Angles(0, math.rad(90), 0) },
+    { "ConcreteBarrier", CFrame.new(-488.00, 64, -2910) * CFrame.Angles(0, math.rad(90), 0) },
+    { "ConcreteBarrier", CFrame.new(-480.48, 64, -2910) * CFrame.Angles(0, math.rad(90), 0) },
+    { "ConcreteBarrier", CFrame.new(-472.96, 64, -2910) * CFrame.Angles(0, math.rad(90), 0) },
+    { "ConcreteBarrier", CFrame.new(-465.44, 64, -2910) * CFrame.Angles(0, math.rad(90), 0) },
+    { "ConcreteBarrier", CFrame.new(-457.92, 64, -2910) * CFrame.Angles(0, math.rad(90), 0) },
+    { "ConcreteBarrier", CFrame.new(-450.40, 64, -2910) * CFrame.Angles(0, math.rad(90), 0) },
+    { "ConcreteBarrier", CFrame.new(-442.88, 64, -2910) * CFrame.Angles(0, math.rad(90), 0) },
+
+    -- South Wall (Z = -2810)
+    { "ConcreteBarrier", CFrame.new(-533.12, 64, -2810) * CFrame.Angles(0, math.rad(90), 0) },
+    { "ConcreteBarrier", CFrame.new(-525.60, 64, -2810) * CFrame.Angles(0, math.rad(90), 0) },
+    { "ConcreteBarrier", CFrame.new(-518.08, 64, -2810) * CFrame.Angles(0, math.rad(90), 0) },
+    { "ConcreteBarrier", CFrame.new(-510.56, 64, -2810) * CFrame.Angles(0, math.rad(90), 0) },
+    { "ConcreteBarrier", CFrame.new(-503.04, 64, -2810) * CFrame.Angles(0, math.rad(90), 0) },
+    { "ConcreteBarrier", CFrame.new(-495.52, 64, -2810) * CFrame.Angles(0, math.rad(90), 0) },
+    { "ConcreteBarrier", CFrame.new(-488.00, 64, -2810) * CFrame.Angles(0, math.rad(90), 0) },
+    { "ConcreteBarrier", CFrame.new(-480.48, 64, -2810) * CFrame.Angles(0, math.rad(90), 0) },
+    { "ConcreteBarrier", CFrame.new(-472.96, 64, -2810) * CFrame.Angles(0, math.rad(90), 0) },
+    { "ConcreteBarrier", CFrame.new(-465.44, 64, -2810) * CFrame.Angles(0, math.rad(90), 0) },
+    { "ConcreteBarrier", CFrame.new(-457.92, 64, -2810) * CFrame.Angles(0, math.rad(90), 0) },
+    { "ConcreteBarrier", CFrame.new(-450.40, 64, -2810) * CFrame.Angles(0, math.rad(90), 0) },
+    { "ConcreteBarrier", CFrame.new(-442.88, 64, -2810) * CFrame.Angles(0, math.rad(90), 0) },
+
+    -- West Wall (X = -538)
+    { "ConcreteBarrier", CFrame.new(-538, 64, -2905.12) * CFrame.Angles(0, 0, 0) },
+    { "ConcreteBarrier", CFrame.new(-538, 64, -2897.60) * CFrame.Angles(0, 0, 0) },
+    { "ConcreteBarrier", CFrame.new(-538, 64, -2890.08) * CFrame.Angles(0, 0, 0) },
+    { "ConcreteBarrier", CFrame.new(-538, 64, -2882.56) * CFrame.Angles(0, 0, 0) },
+    { "ConcreteBarrier", CFrame.new(-538, 64, -2875.04) * CFrame.Angles(0, 0, 0) },
+    { "ConcreteBarrier", CFrame.new(-538, 64, -2867.52) * CFrame.Angles(0, 0, 0) },
+    { "ConcreteBarrier", CFrame.new(-538, 64, -2860.00) * CFrame.Angles(0, 0, 0) },
+    { "ConcreteBarrier", CFrame.new(-538, 64, -2852.48) * CFrame.Angles(0, 0, 0) },
+    { "ConcreteBarrier", CFrame.new(-538, 64, -2844.96) * CFrame.Angles(0, 0, 0) },
+    { "ConcreteBarrier", CFrame.new(-538, 64, -2837.44) * CFrame.Angles(0, 0, 0) },
+    { "ConcreteBarrier", CFrame.new(-538, 64, -2829.92) * CFrame.Angles(0, 0, 0) },
+    { "ConcreteBarrier", CFrame.new(-538, 64, -2822.40) * CFrame.Angles(0, 0, 0) },
+    { "ConcreteBarrier", CFrame.new(-538, 64, -2814.88) * CFrame.Angles(0, 0, 0) },
+
+    -- East Wall (X = -438)
+    { "ConcreteBarrier", CFrame.new(-438, 64, -2905.12) * CFrame.Angles(0, 0, 0) },
+    { "ConcreteBarrier", CFrame.new(-438, 64, -2897.60) * CFrame.Angles(0, 0, 0) },
+    { "ConcreteBarrier", CFrame.new(-438, 64, -2890.08) * CFrame.Angles(0, 0, 0) },
+    { "ConcreteBarrier", CFrame.new(-438, 64, -2882.56) * CFrame.Angles(0, 0, 0) },
+    { "ConcreteBarrier", CFrame.new(-438, 64, -2875.04) * CFrame.Angles(0, 0, 0) },
+    { "ConcreteBarrier", CFrame.new(-438, 64, -2867.52) * CFrame.Angles(0, 0, 0) },
+    { "ConcreteBarrier", CFrame.new(-438, 64, -2860.00) * CFrame.Angles(0, 0, 0) },
+    { "ConcreteBarrier", CFrame.new(-438, 64, -2852.48) * CFrame.Angles(0, 0, 0) },
+    { "ConcreteBarrier", CFrame.new(-438, 64, -2844.96) * CFrame.Angles(0, 0, 0) },
+    { "ConcreteBarrier", CFrame.new(-438, 64, -2837.44) * CFrame.Angles(0, 0, 0) },
+    { "ConcreteBarrier", CFrame.new(-438, 64, -2829.92) * CFrame.Angles(0, 0, 0) },
+    { "ConcreteBarrier", CFrame.new(-438, 64, -2822.40) * CFrame.Angles(0, 0, 0) },
+    { "ConcreteBarrier", CFrame.new(-438, 64, -2814.88) * CFrame.Angles(0, 0, 0) },
+}
+
+return parts
