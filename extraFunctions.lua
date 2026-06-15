@@ -87,8 +87,9 @@ local function ensureCache(wheel)
     if not cached then
         local sa = wheel:FindFirstChild("#SA")
         if not sa then return nil end
-        local car = wheel.Parent and wheel.Parent.Parent
-        local seat = car and car:FindFirstChild("DriverSeat")
+        local car = _G.Functions.getPlayerCar()
+        if not car then return nil end
+        local seat = car:FindFirstChild("DriverSeat")
         if not seat then return nil end
         local weld
         for _, child in seat:GetChildren() do
@@ -128,17 +129,19 @@ _G.Functions.applyAxleOffset = function(wheel, offsets)
     cached.weld.C1 = newLocal:Inverse() * cached.weld.C0
 end
 
-_G.Functions.setWheelPosition = function(wheel, position)
+_G.Functions.setWheelPosition = function(wheel, position, pivot)
     local cached = ensureCache(wheel)
     if not cached then return end
 
-    local car = wheel.Parent and wheel.Parent.Parent
+    local car = _G.Functions.getPlayerCar()
     if not car then return end
 
     local seat = car:FindFirstChild("DriverSeat")
     if not seat then return end
 
-    local pivotLocal = seat.CFrame:PointToObjectSpace(car:GetPivot().Position)
+    local pivotLocal = seat.CFrame:PointToObjectSpace(
+        pivot or car:GetPivot().Position
+    )
 
     local target = pivotLocal + Vector3.new(
         position.X or 0,
