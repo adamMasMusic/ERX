@@ -139,18 +139,16 @@ _G.Functions.setWheelPosition = function(wheel, position, pivot)
     local seat = car:FindFirstChild("DriverSeat")
     if not seat then return end
 
-    local pivotLocal = seat.CFrame:PointToObjectSpace(
-        pivot or car:GetPivot().Position
-    )
-
-    local target = pivotLocal + Vector3.new(
+    local center = pivot or seat.Position
+    local offset = Vector3.new(
         position.X or 0,
         position.Y or 0,
         position.Z or 0
     )
 
-    local newLocal = CFrame.new(target) * cached.origLocal.Rotation
-    cached.weld.C1 = newLocal:Inverse() * cached.weld.C0
+    local targetWorld = CFrame.new(center + offset)
+
+    cached.weld.C1 = targetWorld:Inverse() * seat.CFrame * cached.weld.C0
 end
 
 _G.ExtraFuctions = true
