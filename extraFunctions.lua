@@ -78,20 +78,18 @@ end
 
 local weldCache = {}
 
-_G.Functions.applyAxleOffset = function(wheel, offsets)
-    local sa = wheel:FindFirstChild("#SA")
-    if not sa then return end
-
+local function ensureCache(wheel)
     local cached = weldCache[wheel]
     if cached and not cached.weld.Parent then
         weldCache[wheel] = nil
         cached = nil
     end
-
     if not cached then
+        local sa = wheel:FindFirstChild("#SA")
+        if not sa then return nil end
         local car = wheel.Parent and wheel.Parent.Parent
         local seat = car and car:FindFirstChild("DriverSeat")
-        if not seat then return end
+        if not seat then return nil end
         local weld
         for _, child in seat:GetChildren() do
             if child:IsA("Weld") and child.Part1 == sa then
@@ -99,7 +97,7 @@ _G.Functions.applyAxleOffset = function(wheel, offsets)
                 break
             end
         end
-        if not weld then return end
+        if not weld then return nil end
         cached = {
             weld = weld,
             origLocal = weld.C0 * weld.C1:Inverse(),
@@ -107,6 +105,12 @@ _G.Functions.applyAxleOffset = function(wheel, offsets)
         }
         weldCache[wheel] = cached
     end
+    return cached
+end
+
+_G.Functions.applyAxleOffset = function(wheel, offsets)
+    local cached = ensureCache(wheel)
+    if not cached then return end
 
     if offsets.X ~= nil then cached.offsets.X = offsets.X end
     if offsets.Y ~= nil then cached.offsets.Y = offsets.Y end
@@ -120,6 +124,29 @@ _G.Functions.applyAxleOffset = function(wheel, offsets)
         cached.offsets.Y,
         cached.offsets.Z
     )
+    local newLocal = cached.origLocal + delta
+    cached.weld.C1 = newLocal:Inverse() * cached.weld.C0
+end
+
+_G.Functions.setWheelPosition = function(wheel, position)
+    local cached = ensureCache(wheel)
+    if not cached then return end
+
+    local car = wheel.Parent and wheel.Parent.Parent
+    if not car then return end
+
+    local seat = car:FindFirstChild("DriverSeat")
+    if not seat then return end
+
+    local pivotLocal = seat.CFrame:PointToObjectSpace(car:GetPivot().Position)
+
+    local target = pivotLocal + Vector3.new(
+        position.X or 0,
+        position.Y or 0,
+        position.Z or 0
+    )
+    local delta = target - cached.origLocal.Position
+
     local newLocal = cached.origLocal + delta
     cached.weld.C1 = newLocal:Inverse() * cached.weld.C0
 end
