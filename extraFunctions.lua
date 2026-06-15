@@ -148,9 +148,8 @@ _G.Functions.setWheelPosition = function(wheel, position, pivot)
         position.Y or 0,
         position.Z or 0
     )
-    local delta = target - cached.origLocal.Position
 
-    local newLocal = cached.origLocal + delta
+    local newLocal = CFrame.new(target) * cached.origLocal.Rotation
     cached.weld.C1 = newLocal:Inverse() * cached.weld.C0
 end
 
