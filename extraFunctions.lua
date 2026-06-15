@@ -1,0 +1,127 @@
+local players = game:GetService("Players")
+local lp = players.LocalPlayer
+
+repeat task.wait() until _G.Functions and _G.WindUI
+
+local WindUI = _G.WindUI
+
+_G.Functions.notif = function(title: string, text: string, time: number)
+    WindUI:Notify({
+    	Title = title or "QoL",
+    	Content = text or "No text",
+    	Duration = time or 3,
+    })
+end
+
+_G.Functions.getChar = function() : Model
+    local char = lp.Character or lp.CharacterAdded:Wait()
+    return char
+end
+
+_G.Functions.getPlayerCar = function() : Model
+    for _, car in workspace.Vehicles:GetChildren() do
+        if car:GetAttribute("Owner") == lp.Name then
+            return car
+        end
+    end
+    return nil
+end
+
+_G.Functions.isPlayerInOwnCar = function() : boolean
+    local char = _G.Functions.getChar()
+    if char.Humanoid.SeatPart and char.Humanoid.SeatPart.Parent:GetAttribute("Owner") == lp.Name then
+        return true
+    else
+        return false
+    end
+end
+
+_G.Functions.togglePlayerCar = function(status: boolean) : boolean
+    if
+        lp.PlayerGui.GameGui.VehicleGui and
+        lp.PlayerGui.GameGui.VehicleGui:FindFirstChild("Vehicle Interface") and
+        lp.PlayerGui.GameGui.VehicleGui["Vehicle Interface"]:FindFirstChild("IsOn")
+    then
+        lp.PlayerGui.GameGui.VehicleGui["Vehicle Interface"].IsOn.Value = status
+        return true
+    end
+    return false
+end
+
+_G.Functions.isDriving = function() : boolean
+    local gameGui = lp.PlayerGui:FindFirstChild("GameGui")
+    if not gameGui then return false end
+    local vehicleGui = gameGui:FindFirstChild("VehicleGui")
+    if not vehicleGui then return false end
+    return vehicleGui:FindFirstChild("Vehicle Interface") ~= nil
+end
+
+_G.Functions.applyCamber = function(wheel: Instance, camber: number)
+    local sideLetter = string.sub(wheel.Name, 2, 2)
+    local isRight = (sideLetter == "R")
+
+    local aa = wheel.AxleP.AA
+    local ba = wheel.AxleP.BA
+
+    local radians = math.rad(camber)
+
+    local yMultiplier = isRight and -1 or 1
+
+    local y = math.cos(radians) * yMultiplier
+    local z = math.sin(radians) * yMultiplier
+
+    local newAxis = Vector3.new(0, y, z)
+
+    aa.Axis = newAxis
+    ba.Axis = newAxis
+end
+
+local weldCache = {}
+
+_G.Functions.applyAxleOffset = function(wheel, offsets)
+    local sa = wheel:FindFirstChild("#SA")
+    if not sa then return end
+
+    local cached = weldCache[wheel]
+    if cached and not cached.weld.Parent then
+        weldCache[wheel] = nil
+        cached = nil
+    end
+
+    if not cached then
+        local car = wheel.Parent and wheel.Parent.Parent
+        local seat = car and car:FindFirstChild("DriverSeat")
+        if not seat then return end
+        local weld
+        for _, child in seat:GetChildren() do
+            if child:IsA("Weld") and child.Part1 == sa then
+                weld = child
+                break
+            end
+        end
+        if not weld then return end
+        cached = {
+            weld = weld,
+            origLocal = weld.C0 * weld.C1:Inverse(),
+            offsets = { X = 0, Y = 0, Z = 0 },
+        }
+        weldCache[wheel] = cached
+    end
+
+    if offsets.X ~= nil then cached.offsets.X = offsets.X end
+    if offsets.Y ~= nil then cached.offsets.Y = offsets.Y end
+    if offsets.Z ~= nil then cached.offsets.Z = offsets.Z end
+
+    local isRight = (string.sub(wheel.Name, 2, 2) == "R")
+    local wm = isRight and 1 or -1
+
+    local delta = Vector3.new(
+        cached.offsets.X * wm,
+        cached.offsets.Y,
+        cached.offsets.Z
+    )
+    local newLocal = cached.origLocal + delta
+    cached.weld.C1 = newLocal:Inverse() * cached.weld.C0
+end
+
+_G.ExtraFuctions = true
