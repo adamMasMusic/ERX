@@ -34,6 +34,11 @@ local startPos = nil
 local vehicleUI = nil
 local mapKeybindEnabled = true
 local currentMapKeybind = Enum.KeyCode.J
+local currentTeleportCloseKey = Enum.KeyCode.T
+local currentPeekKey = Enum.KeyCode.Y
+local peeking = false
+local peekDuration = 1
+local peekTimer = 0
 
 local function disconnectSession()
     for _, c in sessionConns do
@@ -195,11 +200,23 @@ local function open()
         end
     end))
 
-    -- T to teleport car to cursor and close map
+    -- Teleport and close
     table.insert(sessionConns, userInput.InputBegan:Connect(function(input, gp)
         if gp or not active then return end
-        if input.KeyCode == Enum.KeyCode.T then
+        if input.KeyCode == currentTeleportCloseKey then
             close(groundHit)
+        end
+    end))
+
+    -- Peek teleport: briefly teleport, resets timer on repeat press
+    table.insert(sessionConns, userInput.InputBegan:Connect(function(input, gp)
+        if gp or not active then return end
+        if input.KeyCode == currentPeekKey then
+            local car = _G.Functions.getPlayerCar()
+            if not car then return end
+            teleportCar(car, groundHit)
+            peeking = true
+            peekTimer = peekDuration
         end
     end))
 
@@ -243,7 +260,15 @@ local function open()
             return
         end
 
-        holdCar(car)
+        if peeking then
+            peekTimer -= dt
+            if peekTimer <= 0 then
+                peeking = false
+                holdCar(car)
+            end
+        else
+            holdCar(car)
+        end
 
         -- Follow tracked target
         if trackTarget and trackTarget.Parent then
@@ -335,11 +360,38 @@ mapTab:Toggle({
     end,
 })
 
+mapTab:Keybind({
+    Title = "Teleport & Close Key",
+    Desc = "Teleport to cursor and close the map",
+    Value = "T",
+    Callback = function(v)
+        currentTeleportCloseKey = Enum.KeyCode[v]
+    end,
+})
+
+mapTab:Keybind({
+    Title = "Peek Teleport Key",
+    Desc = "Briefly teleport to cursor then return to map",
+    Value = "Y",
+    Callback = function(v)
+        currentPeekKey = Enum.KeyCode[v]
+    end,
+})
+
+mapTab:Slider({
+    Title = "Peek Duration",
+    Desc = "How long to stay at the peek location (seconds)",
+    Value = { Min = 0.3, Max = 5, Default = 1, Increments = 0.1 },
+    Callback = function(v)
+        peekDuration = v
+    end,
+})
+
 mapTab:Section({ Title = "Controls" })
 
 mapTab:Paragraph({
     Title = "Map Controls",
-    Desc = "WASD - Pan camera\nScroll - Zoom in/out\nRight-click drag - Drag pan\nLeft-click - Track a vehicle\nT - Teleport to cursor and close\nKeybind - Toggle map on/off",
+    Desc = "WASD - Pan camera\nScroll - Zoom in/out\nRight-click drag - Drag pan\nLeft-click - Track a vehicle\nT - Teleport to cursor and close\nY - Peek teleport (brief visit)\nKeybind - Toggle map on/off",
 })
 
 -- Keybind listener
