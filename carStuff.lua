@@ -411,6 +411,86 @@ local wheelWidth = carModsTab:Slider({
     end,
 })
 
+local rideHeight = carModsTab:Slider({
+    Title = "Ride height front left",
+    Step = 0.1,
+    Value = {
+        Min = -2,
+        Max = 20,
+        Default = 0,
+    },
+    Callback = function(value)
+        local car = _G.Functions.getPlayerCar()
+        if not car then return end
+        for _, wheel in car.Wheels:GetChildren() do
+            if wheel.Name == "FL" then
+                _G.Functions.applyAxleOffset(wheel, {Y = -value})
+            end
+        end
+    end,
+})
+
+local rideHeight = carModsTab:Slider({
+    Title = "Ride height front right",
+    Step = 0.1,
+    Value = {
+        Min = -2,
+        Max = 20,
+        Default = 0,
+    },
+    Callback = function(value)
+        local car = _G.Functions.getPlayerCar()
+        if not car then return end
+        for _, wheel in car.Wheels:GetChildren() do
+            if wheel.Name == "FR" then
+                _G.Functions.applyAxleOffset(wheel, {Y = -value})
+            end
+        end
+    end,
+})
+
+local rideHeight = carModsTab:Slider({
+    Title = "Ride height rear left",
+    Step = 0.1,
+    Value = {
+        Min = -2,
+        Max = 20,
+        Default = 0,
+    },
+    Callback = function(value)
+        local car = _G.Functions.getPlayerCar()
+        if not car then return end
+        for _, wheel in car.Wheels:GetChildren() do
+            if wheel.Name == "RL" then
+                _G.Functions.applyAxleOffset(wheel, {Y = -value})
+            end
+        end
+    end,
+})
+
+local rideHeight = carModsTab:Slider({
+    Title = "Ride height rear right",
+    Step = 0.1,
+    Value = {
+        Min = -2,
+        Max = 20,
+        Default = 0,
+    },
+    Callback = function(value)
+        local car = _G.Functions.getPlayerCar()
+        if not car then return end
+        for _, wheel in car.Wheels:GetChildren() do
+            if wheel.Name == "RR" then
+                _G.Functions.applyAxleOffset(wheel, {Y = -value})
+            end
+        end
+    end,
+})
+
+local carFlySection = carModsTab:Section({
+    Title = "Other",
+})
+
 local saveConfig = carModsTab:Button({
 	Title = "Save Config",
 	Desc = "Saves your config so it can be loaded next time",
