@@ -56,6 +56,53 @@ _G.Functions.isDriving = function() : boolean
     return vehicleGui:FindFirstChild("Vehicle Interface") ~= nil
 end
 
+local weights = {}
+local saved = {}
+local weightsCar = nil
+
+_G.Functions.makeWeightlessCar = function(toggle: boolean)
+    local car = _G.Functions.getPlayerCar()
+    if not car or (not toggle and next(saved) == nil) then return false end
+
+    if weightsCar ~= car and not toggle then
+        weightsCar = nil
+        weights = {}
+        saved = {}
+        return false
+    end
+
+    weightsCar = car
+
+    for _, item in car.Body:GetChildren() do
+        if item:IsA("BasePart") then
+            if toggle then
+                if not saved[item] then
+                    saved[item] = true
+                    weights[item] = item.CustomPhysicalProperties
+                end
+                local old = item.CurrentPhysicalProperties
+                item.CustomPhysicalProperties = PhysicalProperties.new(
+                    0,
+                    old.Friction,
+                    old.Elasticity,
+                    old.FrictionWeight,
+                    old.ElasticityWeight
+                )
+            else
+                item.CustomPhysicalProperties = weights[item]
+            end
+        end
+    end
+
+    if not toggle then
+        weightsCar = nil
+        weights = {}
+        saved = {}
+    end
+
+    return true
+end
+
 _G.Functions.applyCamber = function(wheel: Instance, camber: number)
     local sideLetter = string.sub(wheel.Name, 2, 2)
     local isRight = (sideLetter == "R")
