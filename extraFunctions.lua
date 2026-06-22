@@ -271,6 +271,7 @@ _G.Functions.invertSteering = function()
         end
         _G.Functions.notif(nil, "Steering inverted", 2)
     end
+    steeringInverted = not steeringInverted
 end
 
 _G.ExtraFuctions = true
