@@ -1,3 +1,8 @@
+if _G.carMods then
+    _G.Functions.notif("Car mods", "already loaded", 5)
+    return
+end
+
 loadstring(game:HttpGet("https://raw.githubusercontent.com/adamMasMusic/ERX/refs/heads/main/extraFunctions.lua"))()
 loadstring(game:HttpGet("https://raw.githubusercontent.com/adamMasMusic/ERX/refs/heads/main/structure.lua"))()
 
@@ -177,7 +182,22 @@ local function carBounce(dt)
     local offset = (t < 0.5 and t * 2 or (1 - t) * 2) * _G.carBounceHeight
 
     for _, wheel in car.Wheels:GetChildren() do
-        _G.Functions.applyAxleOffset(wheel, { Y = -offset - _G.carBounceStart })
+        if _G.carBounceInverted then
+            _G.Functions.applyAxleOffset(wheel, { Y = offset - _G.carBounceStart })
+        else
+            _G.Functions.applyAxleOffset(wheel, { Y = -offset - _G.carBounceStart })
+        end
+    end
+end
+
+local function invertWheelSpeed()
+    if not _G.Functions.isDriving() then return end
+    local car = _G.Functions.getPlayerCar()
+    for _, wheel in car.Wheels:GetChildren() do
+        local av = wheel:FindFirstChild("#AV")
+        if av then
+            av.AngularVelocity = -av.AngularVelocity
+        end
     end
 end
 
@@ -305,6 +325,15 @@ local carBounceToggle = carModsTab:Toggle({
     end
 })
 
+_G.carBounceInverted = false
+local carBounceToggle = carModsTab:Toggle({
+    Title = "Invert Car Bounce",
+    Default = false,
+    Callback = function(state)
+        _G.carBounceInverted = state
+    end
+})
+
 _G.carBounceHeight = 3
 local carBounceHeightSlider = carModsTab:Slider({
     Title = "Car bounce height",
@@ -312,8 +341,8 @@ local carBounceHeightSlider = carModsTab:Slider({
     Step = 0.2,
     Value = {
         Min = 0,
-        Max = 20,
-        Default = 3,
+        Max = 30,
+        Default = 1,
     },
     Callback = function(value)
         _G.carBounceHeight = value
@@ -343,8 +372,8 @@ local carBounceStartSlider = carModsTab:Slider({
     Desc = "Basically ride height but for bounce",
     Step = 0.1,
     Value = {
-        Min = -20,
-        Max = 20,
+        Min = -30,
+        Max = 30,
         Default = 0,
     },
     Callback = function(value)
@@ -380,8 +409,8 @@ local rideHeight = carModsTab:Slider({
     Desc = "Modifies the wheels for a custom ride height offset",
     Step = 0.1,
     Value = {
-        Min = -2,
-        Max = 20,
+        Min = -30,
+        Max = 30,
         Default = 0,
     },
     Callback = function(value)
@@ -411,12 +440,12 @@ local wheelWidth = carModsTab:Slider({
     end,
 })
 
-local rideHeight = carModsTab:Slider({
+local rideHeightFL = carModsTab:Slider({
     Title = "Ride height front left",
     Step = 0.1,
     Value = {
-        Min = -2,
-        Max = 20,
+        Min = -30,
+        Max = 30,
         Default = 0,
     },
     Callback = function(value)
@@ -430,12 +459,12 @@ local rideHeight = carModsTab:Slider({
     end,
 })
 
-local rideHeight = carModsTab:Slider({
+local rideHeightFR = carModsTab:Slider({
     Title = "Ride height front right",
     Step = 0.1,
     Value = {
-        Min = -2,
-        Max = 20,
+        Min = -30,
+        Max = 30,
         Default = 0,
     },
     Callback = function(value)
@@ -449,12 +478,12 @@ local rideHeight = carModsTab:Slider({
     end,
 })
 
-local rideHeight = carModsTab:Slider({
+local rideHeightRL = carModsTab:Slider({
     Title = "Ride height rear left",
     Step = 0.1,
     Value = {
-        Min = -2,
-        Max = 20,
+        Min = -30,
+        Max = 30,
         Default = 0,
     },
     Callback = function(value)
@@ -468,12 +497,12 @@ local rideHeight = carModsTab:Slider({
     end,
 })
 
-local rideHeight = carModsTab:Slider({
+local rideHeightRR = carModsTab:Slider({
     Title = "Ride height rear right",
     Step = 0.1,
     Value = {
-        Min = -2,
-        Max = 20,
+        Min = -30,
+        Max = 30,
         Default = 0,
     },
     Callback = function(value)
@@ -485,6 +514,155 @@ local rideHeight = carModsTab:Slider({
             end
         end
     end,
+})
+
+local carFlySection = carModsTab:Section({
+    Title = "Random",
+})
+
+local invertWheelSpeedToggle = carModsTab:Toggle({
+    Title = "Invert drive directions",
+    Desc = "Forward becomes reverse",
+    Default = false,
+    Callback = function(state)
+        _G.invertWheelSpeed = state
+        if state then
+            workspace.CurrentCamera.CameraSubject = _G.Functions.getChar()
+        end
+    end
+})
+
+local flipCar = carModsTab:Button({
+	Title = "Drive car upside down",
+	Desc = "Flips your car and puts your wheels above it to drive upside down",
+	Locked = false,
+	Callback = function()
+		if not _G.Functions.isDriving() then return end
+        local car = _G.Functions.getPlayerCar()
+
+        local pos = car:GetPivot() * CFrame.new(0, 22, 0) * CFrame.Angles(0, math.pi, math.pi)
+        _G.Functions.makeWeightlessCar(true)
+
+        for _, wheel in car.Wheels:GetChildren() do
+            wheel.CanCollide = false
+        end
+        car:PivotTo(pos)
+        rideHeight:Set(-15)
+        for _ = 1, 120 do
+            car:PivotTo(pos)
+            task.wait()
+        end
+        for _, wheel in car.Wheels:GetChildren() do
+            wheel.CanCollide = true
+        end
+        workspace.CurrentCamera.CameraSubject = _G.Functions.getChar()
+        game:GetService("ReplicatedStorage"):WaitForChild("FE"):WaitForChild("ChangeClientSetting"):InvokeServer("AutoCarFlipSetting", false)
+        _G.Functions.invertSteering()
+        invertWheelSpeedToggle:Set(true)
+	end
+})
+
+local flipped = false
+local previousFlipCar = nil
+local swapWheels = carModsTab:Button({
+	Title = "Swap front and rear wheels",
+	Locked = false,
+	Callback = function()
+		if not _G.Functions.isPlayerInOwnCar() then return end
+        local car = _G.Functions.getPlayerCar()
+        if not car then return end
+        flipped = not flipped
+        if previousFlipCar ~= car then
+            flipped = false
+        end
+        previousFlipCar = car
+
+        if car.Wheels:FindFirstChild("FL") and car.Wheels:FindFirstChild("RL") then
+            local a = (car.Wheels.FL.Position - car.Wheels.RL.Position).Magnitude
+            if flipped then
+                _G.Functions.applyAxleOffset(car.Wheels.FL, {Z = 0})
+                _G.Functions.applyAxleOffset(car.Wheels.RL, {Z = 0})
+            else
+                _G.Functions.applyAxleOffset(car.Wheels.FL, {Z = a})
+                _G.Functions.applyAxleOffset(car.Wheels.RL, {Z = -a})
+            end
+        end
+        if car.Wheels:FindFirstChild("FR") and car.Wheels:FindFirstChild("RR") then
+            local a = (car.Wheels.FL.Position - car.Wheels.RL.Position).Magnitude
+            if flipped then
+                _G.Functions.applyAxleOffset(car.Wheels.FR, {Z = 0})
+                _G.Functions.applyAxleOffset(car.Wheels.RR, {Z = 0})
+            else
+                _G.Functions.applyAxleOffset(car.Wheels.FR, {Z = a})
+                _G.Functions.applyAxleOffset(car.Wheels.RR, {Z = -a})
+            end
+        end
+	end
+})
+
+local tricycle = carModsTab:Button({
+	Title = "Make your car a threewheeler",
+	Desc = "Merges the front wheels",
+	Locked = false,
+	Callback = function()
+		if not _G.Functions.isDriving() then return end
+        local car = _G.Functions.getPlayerCar()
+
+        if car.Wheels:FindFirstChild("FL") and car.Wheels:FindFirstChild("FR") then
+            local a = (car.Wheels.FL.Position - car.Wheels.FR.Position).Magnitude
+            if flipped then
+                _G.Functions.applyAxleOffset(car.Wheels.FL, {X = 0})
+                _G.Functions.applyAxleOffset(car.Wheels.FR, {X = 0})
+            else
+                _G.Functions.applyAxleOffset(car.Wheels.FL, {X = -(a/2)})
+                _G.Functions.applyAxleOffset(car.Wheels.FR, {X = -(a/2)})
+            end
+        end
+	end
+})
+
+local previousWeightless = false
+local previousWeightlessCar = nil
+local makeWeightless = carModsTab:Button({
+	Title = "Makes your car weightless",
+	Desc = "Usefull if you want really tall ride height since it makes it hard to flip",
+	Locked = false,
+	Callback = function()
+		if not _G.Functions.isDriving() then return end
+        local car = _G.Functions.getPlayerCar()
+
+        if previousWeightlessCar == car and previousWeightless then
+            _G.Functions.makeWeightlessCar(false)
+        elseif previousWeightlessCar == car and not previousWeightless then
+            _G.Functions.makeWeightlessCar(true)
+        else
+            previousWeightlessCar = nil
+            _G.Functions.makeWeightlessCar(true)
+        end
+        previousWeightlessCar = car
+        previousWeightless = not previousWeightless
+	end
+})
+
+local invertSteering = carModsTab:Button({
+	Title = "Invert steering",
+	Locked = false,
+	Callback = function()
+		_G.Functions.invertSteering()
+	end,
+})
+
+local flipCarInPlace = carModsTab:Button({
+	Title = "Flip car",
+	Locked = false,
+	Callback = function()
+		if not _G.Functions.isDriving() then return end
+        local car = _G.Functions.getPlayerCar()
+
+        local pivot = car:GetPivot()
+        local newPos = pivot.Position + Vector3.new(0, 5, 0)
+        car:PivotTo(CFrame.new(newPos) * (pivot - pivot.Position) * CFrame.Angles(0, 0, math.pi))
+	end,
 })
 
 local carFlySection = carModsTab:Section({
@@ -516,6 +694,12 @@ userInputService.InputEnded:Connect(function(input: InputObject)
     if keys[key] ~= nil then keys[key] = false end
 end)
 
+runService.Stepped:Connect(function()
+    if _G.invertWheelSpeed then
+        invertWheelSpeed()
+    end
+end)
+
 runService.Heartbeat:Connect(function(dt: number)
     if _G.carFlyEnabled then
         controlledFly(dt)
@@ -524,3 +708,5 @@ runService.Heartbeat:Connect(function(dt: number)
         carBounce(dt)
     end
 end)
+
+_G.carMods = true
