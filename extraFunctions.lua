@@ -56,6 +56,14 @@ _G.Functions.isDriving = function() : boolean
     return vehicleGui:FindFirstChild("Vehicle Interface") ~= nil
 end
 
+_G.Functions.getController = function()
+    local car = _G.Functions.getPlayerCar()
+    if not car then return nil end
+    local module = car:FindFirstChild("Drive Controller")
+    if not module then return nil end
+    return require(module)
+end
+
 local weights = {}
 local saved = {}
 local weightsCar = nil
