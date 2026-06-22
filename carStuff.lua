@@ -694,11 +694,18 @@ userInputService.InputEnded:Connect(function(input: InputObject)
     if keys[key] ~= nil then keys[key] = false end
 end)
 
-runService.Stepped:Connect(function()
-    if _G.invertWheelSpeed then
-        invertWheelSpeed()
-    end
-end)
+do
+    local mt = getrawmetatable(game)
+    local oldNewindex = mt.__newindex
+    setreadonly(mt, false)
+    mt.__newindex = newcclosure(function(self, key, value)
+        if _G.invertWheelSpeed and key == "AngularVelocity" and typeof(value) == "number" and self.Name == "#AV" then
+            return oldNewindex(self, key, -value)
+        end
+        return oldNewindex(self, key, value)
+    end)
+    setreadonly(mt, true)
+end
 
 runService.Heartbeat:Connect(function(dt: number)
     if _G.carFlyEnabled then
