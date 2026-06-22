@@ -230,4 +230,47 @@ _G.Functions.setWheelPosition = function(wheel, position, pivot)
     cached.weld.C1 = targetWorld:Inverse() * seat.CFrame * cached.weld.C0
 end
 
+local steeringInverted = false
+local steeringInvertedCar = nil
+_G.Functions.invertSteering = function()
+    if not _G.Functions.isDriving() then return end
+    local car = _G.Functions.getPlayerCar()
+
+    if steeringInvertedCar ~= car then
+        steeringInverted = false
+        steeringInvertedCar = car
+    end
+    local ctrl = _G.Functions.getController()
+    if not ctrl then return end
+    local controls = ctrl.Controls
+    if steeringInverted then
+        if controls._origSteerLeft then
+            controls.SteerLeft = controls._origSteerLeft
+            controls.SteerRight = controls._origSteerRight
+        end
+        if controls._origSteerLeft2 then
+            controls.SteerLeft2 = controls._origSteerLeft2
+            controls.SteerRight2 = controls._origSteerRight2
+        end
+        _G.Functions.notif(nil, "Steering restored", 2)
+    else
+        local origLeft = controls._origSteerLeft or controls.SteerLeft
+        local origRight = controls._origSteerRight or controls.SteerRight
+        controls._origSteerLeft = origLeft
+        controls._origSteerRight = origRight
+        controls.SteerLeft = origRight
+        controls.SteerRight = origLeft
+        
+        if controls.SteerLeft2 and controls.SteerRight2 then
+            local origLeft2 = controls._origSteerLeft2 or controls.SteerLeft2
+            local origRight2 = controls._origSteerRight2 or controls.SteerRight2
+            controls._origSteerLeft2 = origLeft2
+            controls._origSteerRight2 = origRight2
+            controls.SteerLeft2 = origRight2
+            controls.SteerRight2 = origLeft2
+        end
+        _G.Functions.notif(nil, "Steering inverted", 2)
+    end
+end
+
 _G.ExtraFuctions = true
