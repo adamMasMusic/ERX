@@ -694,6 +694,7 @@ userInputService.InputEnded:Connect(function(input: InputObject)
     if keys[key] ~= nil then keys[key] = false end
 end)
 
+--[[
 do
     local mt = getrawmetatable(game)
     local oldNewindex = mt.__newindex
@@ -706,6 +707,7 @@ do
     end)
     setreadonly(mt, true)
 end
+]] 
 
 runService.Heartbeat:Connect(function(dt: number)
     if _G.carFlyEnabled then
