@@ -123,6 +123,30 @@ _G.Functions.applyCamber = function(wheel: Instance, camber: number)
     ba.Axis = newAxis
 end
 
+_G.Functions.applyToe = function(wheel: Instance, toe: number)
+    local isRight = (string.sub(wheel.Name, 2, 2) == "R")
+    local sideMul = isRight and -1 or 1
+    local aa, ba = wheel.AxleP.AA, wheel.AxleP.BA
+
+    local rot = CFrame.Angles(0, math.rad(toe * sideMul), 0)
+    local newAxis = (rot * Vector3.new(0, 1, 0)) * sideMul
+
+    aa.Axis = newAxis
+    ba.Axis = newAxis
+end
+
+_G.Functions.applyCaster = function(wheel: Instance, caster: number)
+    local isRight = (string.sub(wheel.Name, 2, 2) == "R")
+    local sideMul = isRight and -1 or 1
+    local aa, ba = wheel.AxleP.AA, wheel.AxleP.BA
+
+    local rot = CFrame.Angles(math.rad(caster * sideMul), 0, 0)
+    local newAxis = (rot * Vector3.new(0, 1, 0)) * sideMul
+
+    aa.Axis = newAxis
+    ba.Axis = newAxis
+end
+
 local weldCache = {}
 
 local function ensureCache(wheel)
