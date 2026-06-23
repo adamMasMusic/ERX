@@ -190,13 +190,35 @@ local function carBounce(dt)
     end
 end
 
-local function invertWheelSpeed()
-    if not _G.Functions.isDriving() then return end
+local invertConns = {}
+local invertCar = nil
+
+local function cleanupInvertConns()
+    for _, data in pairs(invertConns) do
+        if data.conn then data.conn:Disconnect() end
+    end
+    invertConns = {}
+    invertCar = nil
+end
+
+local function setupInvertForCar()
+    cleanupInvertConns()
     local car = _G.Functions.getPlayerCar()
+    if not car or not car:FindFirstChild("Wheels") then return end
+    invertCar = car
     for _, wheel in car.Wheels:GetChildren() do
-        local av = wheel:FindFirstChild("#AV")
-        if av then
-            av.AngularVelocity = -av.AngularVelocity
+        if wheel:IsA("BasePart") then
+            local av = wheel:FindFirstChild("#AV")
+            if av then
+                local data = { ignoring = false }
+                data.conn = av:GetPropertyChangedSignal("AngularVelocity"):Connect(function()
+                    if not _G.invertWheelSpeed or data.ignoring then return end
+                    data.ignoring = true
+                    av.AngularVelocity = -av.AngularVelocity
+                    data.ignoring = false
+                end)
+                table.insert(invertConns, data)
+            end
         end
     end
 end
@@ -527,7 +549,10 @@ local invertWheelSpeedToggle = carModsTab:Toggle({
     Callback = function(state)
         _G.invertWheelSpeed = state
         if state then
+            setupInvertForCar()
             workspace.CurrentCamera.CameraSubject = _G.Functions.getChar()
+        else
+            cleanupInvertConns()
         end
     end
 })
@@ -570,7 +595,9 @@ local swapWheels = carModsTab:Button({
 	Callback = function()
 		if not _G.Functions.isPlayerInOwnCar() then return end
         local car = _G.Functions.getPlayerCar()
-        if not car then return end
+
+        local pos = car:GetPivot()
+
         flipped = not flipped
         if previousFlipCar ~= car then
             flipped = false
@@ -597,6 +624,7 @@ local swapWheels = carModsTab:Button({
                 _G.Functions.applyAxleOffset(car.Wheels.RR, {Z = -a})
             end
         end
+        car:PivotTo(pos)
 	end
 })
 
@@ -694,20 +722,17 @@ userInputService.InputEnded:Connect(function(input: InputObject)
     if keys[key] ~= nil then keys[key] = false end
 end)
 
---[[
-do
-    local mt = getrawmetatable(game)
-    local oldNewindex = mt.__newindex
-    setreadonly(mt, false)
-    mt.__newindex = newcclosure(function(self, key, value)
-        if _G.invertWheelSpeed and key == "AngularVelocity" and typeof(value) == "number" and self.Name == "#AV" then
-            return oldNewindex(self, key, -value)
+runService.Heartbeat:Connect(function()
+    if not _G.invertWheelSpeed then return end
+    local car = _G.Functions.getPlayerCar()
+    if car ~= invertCar then
+        if car and _G.Functions.isDriving() then
+            setupInvertForCar()
+        else
+            cleanupInvertConns()
         end
-        return oldNewindex(self, key, value)
-    end)
-    setreadonly(mt, true)
-end
-]] 
+    end
+end)
 
 runService.Heartbeat:Connect(function(dt: number)
     if _G.carFlyEnabled then
