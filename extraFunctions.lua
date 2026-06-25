@@ -1,3 +1,4 @@
+local runService = game:GetService("RunService")
 local players = game:GetService("Players")
 local lp = players.LocalPlayer
 
@@ -284,3 +285,39 @@ _G.Functions.invertSteering = function()
 end
 
 _G.ExtraFuctions = true
+
+_G.CarAntiVoid = false
+_G.FreezePosition = Vector3.zero
+_G.FreezeCar = false
+if _G.extraConnection then
+    _G.extraConnection:Disconnect()
+end
+_G.extraConnection = runService.Heartbeat:Connect(function(dt: number)
+    if _G.FreezeCar and _G.Functions.isDriving() then
+        local car = _G.Functions.getPlayerCar()
+        if not car then return end
+
+        if _G.FreezePosition == CFrame.identity then
+            _G.FreezePosition = car:GetPivot()
+        end
+
+        local primary = car.PrimaryPart
+        primary.AssemblyLinearVelocity = Vector3.zero
+        primary.AssemblyAngularVelocity = Vector3.zero
+        car:PivotTo(_G.FreezePosition)
+    else
+        _G.FreezePosition = CFrame.identity
+    end
+    if _G.CarAntiVoid and _G.Functions.isDriving() then
+        local car = _G.Functions.getPlayerCar()
+        if not car then return end
+
+        local pos = car:GetPivot()
+        if pos.Position.Y < -400 then
+            local primary = car.PrimaryPart
+            primary.AssemblyLinearVelocity = Vector3.zero
+            primary.AssemblyAngularVelocity = Vector3.zero
+            car:PivotTo(CFrame.new(pos.Position.X, -200, pos.Position.Z))
+        end
+    end
+end)
