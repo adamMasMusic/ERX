@@ -19,9 +19,18 @@ _G.Functions.getChar = function() : Model
 end
 
 _G.Functions.getPlayerCar = function() : Model
+    local char = _G.Functions.getChar()
+    if char.Humanoid.SeatPart and char.Humanoid.SeatPart.Parent:GetAttribute("Owner") == lp.Name and char.Humanoid.SeatPart.Name == "DriverSeat" then
+        return char.Humanoid.SeatPart.Parent
+    end
     for _, car in workspace.Vehicles:GetChildren() do
         if car:GetAttribute("Owner") == lp.Name then
             return car
+        end
+    end
+    for _, atv in workspace.ATVs:GetChildren() do
+        if atv:GetAttribute("Owner") == lp.Name then
+            return atv
         end
     end
     return nil
