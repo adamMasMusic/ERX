@@ -21,7 +21,7 @@ end
 
 _G.Functions.getPlayerCar = function() : Model
     local char = _G.Functions.getChar()
-    if char.Humanoid.SeatPart and char.Humanoid.SeatPart.Parent:GetAttribute("Owner") == lp.Name and char.Humanoid.SeatPart.Name == "DriverSeat" then
+    if char.Humanoid.SeatPart and char.Humanoid.SeatPart.Name == "DriverSeat" then
         return char.Humanoid.SeatPart.Parent
     end
     for _, car in workspace.Vehicles:GetChildren() do
