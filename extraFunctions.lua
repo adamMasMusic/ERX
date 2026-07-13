@@ -240,8 +240,6 @@ _G.Functions.setWheelPosition = function(wheel, position, pivot)
     cached.weld.C1 = targetWorld:Inverse() * seat.CFrame * cached.weld.C0
 end
 
-local savedStabilizers = {}
-
 _G.Functions.setWheelWorldPosition = function(wheel, worldPosition)
     local cached = ensureCache(wheel)
     if not cached then return end
@@ -252,53 +250,8 @@ _G.Functions.setWheelWorldPosition = function(wheel, worldPosition)
     local seat = car:FindFirstChild("DriverSeat")
     if not seat then return end
 
-    local spring = wheel:FindFirstChild("Spring")
-    if spring and spring:IsA("SpringConstraint") then
-        spring.Enabled = false
-    end
-
-    for _, desc in wheel:GetDescendants() do
-        if desc:IsA("HingeConstraint") or desc:IsA("CylindricalConstraint") then
-            desc.Enabled = false
-        end
-    end
-
-    local stabilizer = wheel:FindFirstChild("Stabilizer")
-    if stabilizer and stabilizer:IsA("BodyGyro") then
-        if not savedStabilizers[wheel] then
-            savedStabilizers[wheel] = { MaxTorque = stabilizer.MaxTorque, P = stabilizer.P }
-        end
-        stabilizer.MaxTorque = Vector3.zero
-        stabilizer.P = 0
-    end
-
     local targetWorld = CFrame.new(worldPosition)
     cached.weld.C1 = targetWorld:Inverse() * seat.CFrame * cached.weld.C0
-end
-
-_G.Functions.restoreWheel = function(wheel)
-    local spring = wheel:FindFirstChild("Spring")
-    if spring and spring:IsA("SpringConstraint") then
-        spring.Enabled = true
-    end
-
-    for _, desc in wheel:GetDescendants() do
-        if desc:IsA("HingeConstraint") or desc:IsA("CylindricalConstraint") then
-            desc.Enabled = true
-        end
-    end
-
-    local stabilizer = wheel:FindFirstChild("Stabilizer")
-    if stabilizer and stabilizer:IsA("BodyGyro") and savedStabilizers[wheel] then
-        stabilizer.MaxTorque = savedStabilizers[wheel].MaxTorque
-        stabilizer.P = savedStabilizers[wheel].P
-        savedStabilizers[wheel] = nil
-    end
-
-    local cached = weldCache[wheel]
-    if cached then
-        cached.weld.C1 = cached.weld.C0 * cached.origLocal:Inverse()
-    end
 end
 
 local steeringInverted = false
