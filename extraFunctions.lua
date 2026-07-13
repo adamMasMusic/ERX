@@ -250,8 +250,47 @@ _G.Functions.setWheelWorldPosition = function(wheel, worldPosition)
     local seat = car:FindFirstChild("DriverSeat")
     if not seat then return end
 
+    local spring = wheel:FindFirstChild("Spring")
+    if spring and spring:IsA("SpringConstraint") then
+        spring.Enabled = false
+    end
+
+    for _, desc in wheel:GetDescendants() do
+        if desc:IsA("HingeConstraint") or desc:IsA("CylindricalConstraint") then
+            desc.Enabled = false
+        end
+    end
+
+    local stabilizer = wheel:FindFirstChild("Stabilizer")
+    if stabilizer then
+        stabilizer.Enabled = false
+    end
+
     local targetWorld = CFrame.new(worldPosition)
     cached.weld.C1 = targetWorld:Inverse() * seat.CFrame * cached.weld.C0
+end
+
+_G.Functions.restoreWheel = function(wheel)
+    local spring = wheel:FindFirstChild("Spring")
+    if spring and spring:IsA("SpringConstraint") then
+        spring.Enabled = true
+    end
+
+    for _, desc in wheel:GetDescendants() do
+        if desc:IsA("HingeConstraint") or desc:IsA("CylindricalConstraint") then
+            desc.Enabled = true
+        end
+    end
+
+    local stabilizer = wheel:FindFirstChild("Stabilizer")
+    if stabilizer then
+        stabilizer.Enabled = true
+    end
+
+    local cached = weldCache[wheel]
+    if cached then
+        cached.weld.C1 = cached.weld.C0 * cached.origLocal:Inverse()
+    end
 end
 
 local steeringInverted = false
