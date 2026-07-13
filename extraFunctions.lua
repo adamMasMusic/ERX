@@ -240,6 +240,20 @@ _G.Functions.setWheelPosition = function(wheel, position, pivot)
     cached.weld.C1 = targetWorld:Inverse() * seat.CFrame * cached.weld.C0
 end
 
+_G.Functions.setWheelWorldPosition = function(wheel, worldPosition)
+    local cached = ensureCache(wheel)
+    if not cached then return end
+
+    local car = _G.Functions.getPlayerCar()
+    if not car then return end
+
+    local seat = car:FindFirstChild("DriverSeat")
+    if not seat then return end
+
+    local targetWorld = CFrame.new(worldPosition)
+    cached.weld.C1 = targetWorld:Inverse() * seat.CFrame * cached.weld.C0
+end
+
 local steeringInverted = false
 local steeringInvertedCar = nil
 _G.Functions.invertSteering = function()
