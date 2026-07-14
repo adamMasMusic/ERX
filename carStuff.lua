@@ -9,6 +9,9 @@ loadstring(game:HttpGet("https://raw.githubusercontent.com/adamMasMusic/ERX/refs
 local players = game:GetService("Players")
 local runService = game:GetService("RunService")
 local userInputService = game:GetService("UserInputService")
+local replicatedStorage = game:GetService("ReplicatedStorage")
+local lighting = game:GetService("Lighting")
+local guiService = game:GetService("GuiService")
 
 repeat task.wait() until _G.ExtraFuctions and _G.WindUI and _G.ERXStructure
 
@@ -221,6 +224,68 @@ local function setupInvertForCar()
             end
         end
     end
+end
+
+local function findWSManager()
+    local found = {}
+    for _, obj in getgc(true) do
+        if type(obj) == "table" and rawget(obj, "activeLayers") ~= nil then
+            local ok, mt = pcall(getrawmetatable, obj)
+            if ok and type(mt) == "table" and type(rawget(mt, "removeLayer")) == "function"
+                and type(rawget(mt, "getLayerById")) == "function"
+                and type(rawget(mt, "addLayer")) == "function"
+            then
+                table.insert(found, obj)
+            end
+        end
+    end
+    return found
+end
+
+local function exitModShop()
+    if not lp.PlayerGui:FindFirstChild("ModShopUI") then return end
+    local g = getrenv()._G
+    guiService.TouchControlsEnabled = true
+    g.InModShop = false
+    g.InMenu = nil
+    lp.Character.HumanoidRootPart.Anchored = false
+    local managers = findWSManager()
+    for _, manager in managers do
+        for _, layer in manager.activeLayers do
+            if layer.id == "ModShop" then
+                manager:removeLayer("ModShop")
+                break
+            end
+        end
+    end
+    replicatedStorage.FE:WaitForChild("ExitModShop"):FireServer(nil, { Accessories = {}, Texture = "Standard" })
+    lp.PlayerGui.ModShopUI.FinishedModifying:Fire()
+    task.wait(0.2)
+    lp.PlayerGui.GameGui.Enabled = true
+    lp.PlayerGui.GameMenus.Enabled = true
+    g.SetBackpackEnabled(true)
+    workspace.CurrentCamera.CameraType = "Custom"
+	workspace.CurrentCamera.CameraSubject = lp.Character.Humanoid
+	workspace.CurrentCamera.FieldOfView = 70
+    if workspace.LoadedInteriors:FindFirstChild("ModShop") then
+		workspace.LoadedInteriors.ModShop:Destroy()
+	end
+	if workspace.LoadedInteriors:FindFirstChild("ModShopPlayerHolder") then
+		workspace.LoadedInteriors.ModShopPlayerHolder:Destroy()
+	end
+end
+
+local function quickRepairCar()
+    if not _G.Functions.isPlayerInOwnCar() then return end
+    local car = _G.Functions.getPlayerCar()
+    local old = car:GetPivot()
+    car:PivotTo(CFrame.new(-673, 25, 157))
+    repeat task.wait() until getrenv()._G.InModShop == true
+    print(replicatedStorage.FE:WaitForChild("ModShop"):InvokeServer(car.Name, "RepairVehicle"))
+    exitModShop()
+    repeat task.wait() until _G.Functions.isDriving() and _G.Functions.isPlayerInOwnCar()
+    car = _G.Functions.getPlayerCar()
+    car:PivotTo(old)
 end
 
 local carFlyToggle = carModsTab:Toggle({
@@ -539,6 +604,68 @@ local rideHeightRR = carModsTab:Slider({
 })
 
 local carFlySection = carModsTab:Section({
+    Title = "Utility",
+})
+
+_G.deadDrive = false
+local deadDriveToggle = carModsTab:Toggle({
+    Title = "Dead drive",
+    Desc = "Drive the car when it breaks or you die",
+    Default = false,
+    Callback = function(state)
+        _G.deadDrive = state
+    end
+})
+CarModsConfig:Register("deadDriveToggle", deadDriveToggle)
+
+local flipCar = carModsTab:Button({
+	Title = "Fix car",
+	Desc = "Fixes your car by using the mod shop",
+	Locked = false,
+	Callback = function()
+        if not lp:FindFirstChild("Is_Wanted") and _G.Functions.isDriving() and _G.Functions.isPlayerInOwnCar() then
+            quickRepairCar()
+        else
+            _G.Functions.notif("Car mods", "You are wanted!")
+        end
+	end
+})
+
+local carFlySection = carModsTab:Section({
+    Title = "Trolling",
+})
+
+_G.earRapePlayerSelected = nil
+local earRapePlayerDropdown = carModsTab:Dropdown({
+    Title = "Earape Player",
+    Desc = "Select what player to earrape",
+    Values = {},
+    Value = nil,
+    AllowNone = true,
+    Callback = function(option) 
+        _G.earRapePlayerSelected = option
+    end
+})
+
+_G.earRapePlayer = false
+local earRapePlayerToggle = carModsTab:Toggle({
+    Title = "Earrape Player",
+    Desc = "This shit dont work basically but its here (you gotta be close to the player use fly and not move)",
+    Default = false,
+    Callback = function(state)
+        _G.earRapePlayer = state
+    end
+})
+
+local tempPlayers = {}
+for _, player in players:GetChildren() do
+    if player.Name ~= lp.Name then
+        table.insert(tempPlayers, player.Name)
+    end
+end
+earRapePlayerDropdown:Refresh(tempPlayers)
+
+local carFlySection = carModsTab:Section({
     Title = "Random",
 })
 
@@ -722,6 +849,43 @@ userInputService.InputEnded:Connect(function(input: InputObject)
     if keys[key] ~= nil then keys[key] = false end
 end)
 
+local lastDriving = 0
+local debounce = false
+runService.Heartbeat:Connect(function()
+    local char = _G.Functions.getChar()
+    local car = _G.Functions.getPlayerCar()
+    if not car or not char:FindFirstChild("Humanoid") then return end
+    if _G.deadDrive and not debounce and (os.time() - lastDriving) < 2 and char.Humanoid.Health <= 0.2 and not _G.Functions.isPlayerInOwnCar() then
+        debounce = true
+        repeat task.wait() until char.Humanoid.SeatPart == nil
+        task.wait(0.5)
+        car.DriverSeat:Sit(char.Humanoid)
+        for _, part in char:GetChildren() do
+            if part:IsA("BasePart") and string.find(part.Name, "Leg") then
+                part.CanCollide = false
+            end
+        end
+    end
+    if _G.deadDrive and car:FindFirstChild("Control_Values") and car.Control_Values.Health.Value <= 0 then
+        car.Control_Values.Health.Value = 69
+    end
+    if _G.Functions.isDriving() then
+        lastDriving = os.time()
+        debounce = false
+    end
+    if _G.deadDrive then
+        if lighting.HealthBlur.Enabled then
+            lighting.HealthBlur.Enabled = false
+        end
+        if lighting.HealthColor.Enabled then
+            lighting.HealthColor.Enabled = false
+        end
+        if lp.PlayerGui.GameGui.HealthDamage.Visible then
+            lp.PlayerGui.GameGui.HealthDamage.Visible = false
+        end
+    end
+end)
+
 runService.Heartbeat:Connect(function()
     if not _G.invertWheelSpeed then return end
     local car = _G.Functions.getPlayerCar()
@@ -741,6 +905,46 @@ runService.Heartbeat:Connect(function(dt: number)
     if _G.carBounceEnabled then
         carBounce(dt)
     end
+    if _G.earRapePlayer and _G.earRapePlayerSelected and players:FindFirstChild(_G.earRapePlayerSelected) and _G.Functions.isDriving() then
+        local car = _G.Functions.getPlayerCar()
+        if not car:FindFirstChild("Wheels") then return end
+        local remote = car:FindFirstChild("Input_Events"):FindFirstChild("Drift")
+        local target = players:FindFirstChild(_G.earRapePlayerSelected)
+        local targetCharacter = target.Character
+        if _G.earRapePlayerAllWheels then
+            for _, wheel in car.Wheels:GetChildren() do
+                wheel.Arm:PivotTo(targetCharacter:GetPivot())
+                --_G.Functions.setWheelWorldPosition(wheel, targetCharacter:GetPivot().Position)
+                wheel.CanCollide = false
+            end
+        else
+            _G.Functions.setWheelWorldPosition(car.Wheels.FR, targetCharacter:GetPivot().Position)
+            for _, wheel in car.Wheels:GetChildren() do
+                if wheel.Name == "FR" then
+                    wheel.CanCollide = false
+                else
+                    wheel.CanCollide = true
+                end
+            end
+            car.Wheels.FR.CanCollide = false
+        end
+        if remote then
+            remote:FireServer(math.huge, math.huge)
+        end
+    end
 end)
+
+local function updateEarrapePlayers()
+    local tempPlayers = {}
+    for _, player in players:GetChildren() do
+        if player.Name ~= lp.Name then
+            table.insert(tempPlayers, player.Name)
+        end
+    end
+    earRapePlayerDropdown:Refresh(tempPlayers)
+end
+
+players.ChildAdded:Connect(updateEarrapePlayers)
+players.ChildRemoved:Connect(updateEarrapePlayers)
 
 _G.carMods = true
