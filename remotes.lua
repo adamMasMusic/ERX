@@ -1,6 +1,8 @@
 local players = game:GetService("Players")
 local replicatedStorage = game:GetService("ReplicatedStorage")
 
+if _G.safeRemotes then return warn("[QoL] remotes already loaded") end
+
 repeat task.wait() until _G.Functions
 
 local lp = players.LocalPlayer
