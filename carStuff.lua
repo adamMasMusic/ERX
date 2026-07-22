@@ -944,7 +944,7 @@ local function updateEarrapePlayers()
     earRapePlayerDropdown:Refresh(tempPlayers)
 end
 
-players.ChildAdded:Connect(updateEarrapePlayers)
-players.ChildRemoved:Connect(updateEarrapePlayers)
+--players.ChildAdded:Connect(updateEarrapePlayers)
+--players.ChildRemoved:Connect(updateEarrapePlayers)
 
 _G.carMods = true
