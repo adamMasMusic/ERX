@@ -41,5 +41,10 @@ _G.Functions.safeGetRemote = newcclosure(function(remoteName)
 end)
 
 _G.safeRemotes = {
-    TeamChange = _G.Functions.safeGetRemote("TeamChange")
+    TeamChange = _G.Functions.safeGetRemote("TeamChange"),
+	ChangeLightbulb = _G.Functions.safeGetRemote("ChangeLightbulb"),
+	FirewallHack = _G.Functions.safeGetRemote("FirewallHack"),
+	ConnectWires = _G.Functions.safeGetRemote("ConnectWires"),
+	Crowbar = _G.Functions.safeGetRemote("Crowbar"),
+	BuyGas = _G.Functions.safeGetRemote("BuyGas")
 }
